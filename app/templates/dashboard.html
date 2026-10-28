@@ -1,68 +1,767 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Tático Cebraspe - PRF Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
 
-{% block title %}Dashboard - PRF Tracker{% endblock %}
-
-{% block nav %}
-<span class="text-slate-400">Olá, <strong class="text-white">{{ user.name }}</strong></span>
-<form action="/auth/logout" method="POST" class="inline">
-  <button type="submit" class="text-slate-400 hover:text-rose-400 transition-colors">Sair</button>
-</form>
-{% endblock %}
-
-{% block content %}
-<div class="space-y-6">
-  <!-- Top Metrics -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div class="text-xs text-slate-400">Pontuação Líquida Cebraspe</div>
-      <div class="text-3xl font-extrabold text-white font-mono tabular-nums mt-2">
-        {% if metrics.liquid_total > 0 %}+{{ metrics.liquid_total }}{% else %}{{ metrics.liquid_total }}{% endif %}
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand & Focus Area -->
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-sm sm:text-base font-bold tracking-tight text-white">PRF Tracker</span>
+          <span class="text-slate-600 mx-1.5 hidden sm:inline">·</span>
+          <span class="text-xs text-amber-400 font-semibold font-mono hidden sm:inline">Foco: PRF 2027</span>
+        </div>
       </div>
-      <div class="text-[11px] text-slate-500 mt-1">Certo - Errado (Corte: 48 pts)</div>
-    </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div class="text-xs text-slate-400">Eficiência Líquida</div>
-      <div class="text-3xl font-extrabold text-amber-400 font-mono tabular-nums mt-2">
-        {{ metrics.efficiency }}%
+      <!-- User Profile & Logout -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 pl-2">
+          <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs">
+            <span id="user-initial">C</span>
+          </div>
+          <div class="text-left hidden sm:block">
+            <div id="user-display-name" class="text-xs font-semibold text-slate-200 truncate max-w-[150px]">Candidato</div>
+            <div class="text-[10px] text-slate-500 font-mono">Edital Cebraspe</div>
+          </div>
+        </div>
+
+        <button 
+          onclick="handleLogout()"
+          class="px-3 py-1.5 rounded-lg border border-slate-800 hover:border-rose-800 hover:bg-rose-950/30 text-xs text-slate-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+          title="Encerrar Sessão"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span class="hidden sm:inline">Sair</span>
+        </button>
       </div>
-      <div class="text-[11px] text-slate-500 mt-1">Bruto: {{ metrics.accuracy }}%</div>
-    </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div class="text-xs text-slate-400">Itens Resolvidos</div>
-      <div class="text-2xl font-bold text-white font-mono tabular-nums mt-2">
-        <span class="text-emerald-400">{{ metrics.certo }}C</span> /
-        <span class="text-rose-400">{{ metrics.errado }}E</span> /
-        <span class="text-slate-400">{{ metrics.branco }}B</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+    <!-- KPI Section: Cebraspe Liquid Score Highlight -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- 1. Pontuação Líquida Cebraspe -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>Pontuação Líquida Real</span>
+          <span class="font-mono text-slate-500 text-[11px]">Certas - Erradas</span>
+        </div>
+        <div class="my-3 flex items-baseline gap-2">
+          <span id="metric-liquid" class="text-4xl font-extrabold tracking-tight text-white font-mono tabular-nums">0</span>
+          <span class="text-xs text-slate-400 font-medium">pts líquidos</span>
+        </div>
+        <div id="metric-cutoff-status" class="text-xs text-slate-400 flex items-center gap-1.5">
+          <span class="text-amber-400 font-medium">Meta Edital: ≥ 48 pts</span>
+        </div>
       </div>
-      <div class="text-[11px] text-slate-500 mt-1">Total: {{ metrics.total_questions }} itens</div>
-    </div>
 
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div class="text-xs text-slate-400">Status Geral do Edital</div>
-      <div class="text-lg font-bold mt-2">
-        {% if metrics.general_passed %}
-          <span class="text-emerald-400">Aprovado</span>
-        {% else %}
-          <span class="text-rose-400">Abaixo do Corte</span>
-        {% endif %}
+      <!-- 2. Distribuição Cebraspe (Certo / Errado / Branco) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div class="text-xs text-slate-400">Distribuição de Itens</div>
+        <div class="my-2 grid grid-cols-3 gap-2">
+          <div class="text-center p-2 rounded-lg bg-emerald-950/40 border border-emerald-900/50">
+            <div class="text-[10px] text-emerald-400 font-medium">Certas</div>
+            <div id="metric-certo" class="text-lg font-bold text-emerald-300 font-mono tabular-nums mt-0.5">0</div>
+          </div>
+          <div class="text-center p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
+            <div class="text-[10px] text-rose-400 font-medium">Erradas</div>
+            <div id="metric-errado" class="text-lg font-bold text-rose-300 font-mono tabular-nums mt-0.5">0</div>
+          </div>
+          <div class="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div class="text-[10px] text-slate-400 font-medium">Branco</div>
+            <div id="metric-branco" class="text-lg font-bold text-slate-300 font-mono tabular-nums mt-0.5">0</div>
+          </div>
+        </div>
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>Total de Itens</span>
+          <span id="metric-total" class="font-mono tabular-nums text-slate-200 font-semibold">0</span>
+        </div>
       </div>
-      <div class="text-[11px] text-slate-500 mt-1">Min. 10 por bloco e 48 total</div>
-    </div>
-  </div>
 
-  <!-- Bloco II Highlight -->
-  <div class="bg-slate-900 border-2 border-amber-500/40 rounded-xl p-5">
-    <div class="flex items-center justify-between">
-      <h3 class="text-sm font-bold text-amber-400">Bloco II: Legislação de Trânsito (CTB) - Peso 10</h3>
-      <span class="font-mono text-xs text-slate-300">
-        Líquido: {{ metrics.blocks['Bloco II - Legislação de Trânsito'].liquid }} pts
-      </span>
+      <!-- 3. Eficiência Líquida e Retenção -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>Eficiência Líquida</span>
+          <span class="font-mono text-slate-500 text-[11px]">% Líquida</span>
+        </div>
+        <div class="my-3 flex items-baseline gap-2">
+          <span id="metric-efficiency" class="text-4xl font-extrabold tracking-tight text-amber-400 font-mono tabular-nums">0%</span>
+          <span id="metric-accuracy" class="text-xs text-slate-500 font-mono tabular-nums">(bruto: 0%)</span>
+        </div>
+        <div class="text-xs text-slate-400">
+          <span id="metric-penalties">0 erros anularam 0 acertos</span>
+        </div>
+      </div>
+
+      <!-- 4. Status Eliminatório por Bloco -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>Status do Concurso</span>
+          <span class="font-mono text-slate-500 text-[11px]">Cebraspe PRF</span>
+        </div>
+        <div class="my-3">
+          <div id="metric-status-badge" class="text-base font-bold text-white flex items-center gap-1.5">
+            <span class="text-amber-400">Calculando...</span>
+          </div>
+        </div>
+        <div class="text-xs text-slate-400 flex items-center gap-1">
+          <span>Mínimos: 10 pts por bloco</span>
+        </div>
+      </div>
+
     </div>
-    <p class="text-xs text-slate-400 mt-1">
-      30 itens na prova objetiva. Mínimo de 10 pontos exigido para não ser eliminado do concurso.
-    </p>
-  </div>
-</div>
-{% endblock %}
+
+    <!-- Quick Question Logger Form -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 sm:p-6 shadow-md">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            <span>Lançamento Rápido de Questão</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Registre resoluções individuais e mapeie pegadinhas da banca Cebraspe.</p>
+        </div>
+        <div id="form-feedback" class="text-xs font-semibold hidden"></div>
+      </div>
+
+      <form id="log-form" onsubmit="handleLogQuestion(event)" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <!-- Subject Selector -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Disciplina da PRF</label>
+            <select id="log-subject" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+              <option value="">Carregando disciplinas...</option>
+            </select>
+          </div>
+
+          <!-- Result Selector -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Resultado do Item</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" onclick="setLogResult('CERTO')" id="btn-res-certo" class="py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300">
+                CERTO (+1)
+              </button>
+              <button type="button" onclick="setLogResult('ERRADO')" id="btn-res-errado" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
+                ERRADO (-1)
+              </button>
+              <button type="button" onclick="setLogResult('BRANCO')" id="btn-res-branco" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
+                BRANCO (0)
+              </button>
+            </div>
+          </div>
+
+          <!-- Difficulty Selector -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Dificuldade Percebida</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" onclick="setLogDifficulty('FACIL')" id="btn-diff-facil" class="py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
+                Fácil
+              </button>
+              <button type="button" onclick="setLogDifficulty('MEDIO')" id="btn-diff-medio" class="py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300">
+                Média
+              </button>
+              <button type="button" onclick="setLogDifficulty('DIFICIL')" id="btn-diff-dificil" class="py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
+                Difícil
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Notes / Cebraspe Trap Input -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Anotação / Pegadinha da Banca (alimenta seu Caderno de Erros)</span>
+            <span class="text-[10px] text-slate-500 font-normal">Recomendado para itens errados</span>
+          </label>
+          <input 
+            type="text" 
+            id="log-notes" 
+            placeholder="Ex: Art. 306 CTB: embriaguez ao volante é crime de perigo abstrato, não exige perigo concreto."
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
+          >
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end pt-1">
+          <button 
+            type="submit" 
+            id="log-submit-btn"
+            class="px-5 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Salvar Resolução</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Official PRF Blocks Breakdown Section -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-bold text-white tracking-tight">Desempenho nos Blocos Oficiais da PRF</h2>
+        <span class="text-xs text-slate-400 font-mono">Exigência: ≥ 10 pts líquidos em cada bloco</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="blocks-container">
+        <!-- Rendered dynamically by JavaScript -->
+        <div class="col-span-3 text-center py-8 text-xs text-slate-500">Carregando métricas dos blocos...</div>
+      </div>
+    </div>
+
+    <!-- Caderno de Erros (Mistake Notebook) Section -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md">
+      
+      <div class="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/80">
+        <div>
+          <h2 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>Caderno de Erros & Pegadinhas Cebraspe</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Revise as questões erradas e marque como superadas para fixar os conceitos.</p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <button 
+            onclick="loadCadernoErros(false)" 
+            id="filter-pending-btn"
+            class="px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors"
+          >
+            Pendentes
+          </button>
+          <button 
+            onclick="loadCadernoErros(true)" 
+            id="filter-reviewed-btn"
+            class="px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors"
+          >
+            Revisadas
+          </button>
+        </div>
+      </div>
+
+      <!-- Caderno de Erros Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 bg-slate-950/40 text-[11px] font-semibold tracking-wider uppercase">
+              <th class="py-3 px-4">Disciplina</th>
+              <th class="py-3 px-3">Dificuldade</th>
+              <th class="py-3 px-4">Pegadinha / Anotação da Banca</th>
+              <th class="py-3 px-3">Data</th>
+              <th class="py-3 px-4 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody id="caderno-table-body" class="divide-y divide-slate-800/60">
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-500">Carregando caderno de erros...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto border-t border-slate-900 bg-slate-950 px-6 py-4 text-center text-xs text-slate-500 font-mono">
+    PRF Tracker · Sistema Tático de Métricas Cebraspe · Underline Tech
+  </footer>
+
+  <!-- Native JavaScript Application Logic -->
+  <script>
+    // State
+    let currentResult = 'CERTO';
+    let currentDifficulty = 'MEDIO';
+    let subjectsCache = [];
+    let subjectsMap = {};
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set display name from localStorage if available
+      const storedName = localStorage.getItem('user_name');
+      if (storedName) {
+        document.getElementById('user-display-name').innerText = storedName;
+        document.getElementById('user-initial').innerText = storedName.charAt(0).toUpperCase();
+      }
+
+      loadSubjects();
+      loadMetrics();
+      loadCadernoErros(false);
+    });
+
+    // Handle Logout
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (e) {
+        console.error(e);
+      }
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_name');
+      window.location.href = '/login';
+    }
+
+    // Toggle Form Buttons
+    function setLogResult(res) {
+      currentResult = res;
+      const bCerto = document.getElementById('btn-res-certo');
+      const bErrado = document.getElementById('btn-res-errado');
+      const bBranco = document.getElementById('btn-res-branco');
+
+      bCerto.className = res === 'CERTO'
+        ? 'py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300'
+        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
+
+      bErrado.className = res === 'ERRADO'
+        ? 'py-2 text-xs font-bold rounded-lg border border-rose-500 bg-rose-950/80 text-rose-300'
+        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
+
+      bBranco.className = res === 'BRANCO'
+        ? 'py-2 text-xs font-bold rounded-lg border border-slate-500 bg-slate-800 text-slate-200'
+        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
+    }
+
+    function setLogDifficulty(diff) {
+      currentDifficulty = diff;
+      const bFacil = document.getElementById('btn-diff-facil');
+      const bMedio = document.getElementById('btn-diff-medio');
+      const bDificil = document.getElementById('btn-diff-dificil');
+
+      bFacil.className = diff === 'FACIL'
+        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
+        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+
+      bMedio.className = diff === 'MEDIO'
+        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
+        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+
+      bDificil.className = diff === 'DIFICIL'
+        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
+        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+    }
+
+    // Load Subjects
+    async function loadSubjects() {
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/study/subjects', {
+          credentials: 'include',
+          headers
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const subjects = await res.json();
+        subjectsCache = subjects;
+        subjects.forEach(s => { subjectsMap[s.id] = s; });
+
+        const select = document.getElementById('log-subject');
+        select.innerHTML = '<option value="">Selecione a Disciplina...</option>';
+
+        // Group by block
+        const b2 = subjects.filter(s => s.block.includes('Bloco II'));
+        const b1 = subjects.filter(s => s.block.includes('Bloco I'));
+        const b3 = subjects.filter(s => s.block.includes('Bloco III'));
+
+        if (b2.length > 0) {
+          const g2 = document.createElement('optgroup');
+          g2.label = 'Bloco II - Legislação de Trânsito (Prioridade Máxima)';
+          b2.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.innerText = `${s.name} (Peso ${s.weight})`;
+            if (s.name.includes('Trânsito')) opt.selected = true;
+            g2.appendChild(opt);
+          });
+          select.appendChild(g2);
+        }
+
+        if (b1.length > 0) {
+          const g1 = document.createElement('optgroup');
+          g1.label = 'Bloco I - Conhecimentos Gerais';
+          b1.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.innerText = `${s.name} (Peso ${s.weight})`;
+            g1.appendChild(opt);
+          });
+          select.appendChild(g1);
+        }
+
+        if (b3.length > 0) {
+          const g3 = document.createElement('optgroup');
+          g3.label = 'Bloco III - Conhecimentos Específicos';
+          b3.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.innerText = `${s.name} (Peso ${s.weight})`;
+            g3.appendChild(opt);
+          });
+          select.appendChild(g3);
+        }
+
+      } catch (err) {
+        console.error('Erro ao carregar matérias:', err);
+      }
+    }
+
+    // Load Metrics
+    async function loadMetrics() {
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/study/metrics', {
+          credentials: 'include',
+          headers
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await res.json();
+
+        // Update Top KPIs
+        const liquidElem = document.getElementById('metric-liquid');
+        liquidElem.innerText = data.liquid_total > 0 ? `+${data.liquid_total}` : data.liquid_total;
+        
+        document.getElementById('metric-certo').innerText = data.certo;
+        document.getElementById('metric-errado').innerText = data.errado;
+        document.getElementById('metric-branco').innerText = data.branco;
+        document.getElementById('metric-total').innerText = data.total_questions;
+        document.getElementById('metric-efficiency').innerText = `${data.efficiency}%`;
+        document.getElementById('metric-accuracy').innerText = `(bruto: ${data.accuracy}%)`;
+        document.getElementById('metric-penalties').innerText = `${data.errado} erros anularam ${data.errado} acertos`;
+
+        // Cutoff badge
+        const statusBadge = document.getElementById('metric-status-badge');
+        const cutoffStatus = document.getElementById('metric-cutoff-status');
+
+        if (data.general_passed) {
+          statusBadge.innerHTML = `<span class="text-emerald-400 font-bold">Habilitado (≥ 48 pts)</span>`;
+          cutoffStatus.innerHTML = `<span class="text-emerald-400 font-semibold">Corte geral atingido!</span>`;
+        } else if (data.eliminated_by_minima) {
+          statusBadge.innerHTML = `<span class="text-rose-400 font-bold">Risco de Bloco (&lt; 10)</span>`;
+          cutoffStatus.innerHTML = `<span class="text-rose-400 font-semibold">Mínimo pendente em algum bloco</span>`;
+        } else {
+          statusBadge.innerHTML = `<span class="text-amber-400 font-bold">Em Construção</span>`;
+          cutoffStatus.innerHTML = `<span class="text-amber-400 font-semibold">Meta de 48 pts (${48 - data.liquid_total} restantes)</span>`;
+        }
+
+        // Render Blocks
+        renderBlocks(data.blocks);
+
+      } catch (err) {
+        console.error('Erro ao buscar métricas:', err);
+      }
+    }
+
+    // Render Blocks
+    function renderBlocks(blocks) {
+      const container = document.getElementById('blocks-container');
+      if (!blocks) return;
+
+      const blockDefs = [
+        {
+          key: 'Bloco I - Conhecimentos Gerais',
+          title: 'Bloco I: Gerais',
+          subtitle: 'Português, RLM, Informática, Física, etc.',
+          isHighlight: false
+        },
+        {
+          key: 'Bloco II - Legislação de Trânsito',
+          title: 'Bloco II: Legislação de Trânsito (CTB)',
+          subtitle: '30 itens esperados · Peso 10 (Vital)',
+          isHighlight: true
+        },
+        {
+          key: 'Bloco III - Conhecimentos Específicos',
+          title: 'Bloco III: Direito',
+          subtitle: 'Penal, Processual, Constitucional, Adm.',
+          isHighlight: false
+        }
+      ];
+
+      container.innerHTML = blockDefs.map(def => {
+        const bData = blocks[def.key] || { certo: 0, errado: 0, branco: 0, liquid: 0, passed: false, efficiency: 0 };
+        const progressPct = Math.min(100, Math.max(0, (bData.liquid / 10) * 100));
+
+        return `
+          <div class="rounded-xl p-5 flex flex-col justify-between ${
+            def.isHighlight 
+              ? 'bg-slate-900 border-2 border-amber-500/50 shadow-lg shadow-amber-500/5' 
+              : 'bg-slate-900 border border-slate-800'
+          }">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div>
+                  <h3 class="text-sm font-bold text-white tracking-tight">${def.title}</h3>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${def.subtitle}</p>
+                </div>
+                ${bData.passed 
+                  ? '<span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">Apto (≥10)</span>'
+                  : '<span class="text-[10px] font-bold text-rose-400 bg-rose-950/60 border border-rose-800 px-2 py-0.5 rounded">Mínimo Pendente</span>'
+                }
+              </div>
+
+              <div class="flex items-baseline justify-between py-2 border-y border-slate-800/80 mb-3">
+                <div>
+                  <span class="text-2xl font-bold font-mono tabular-nums text-white">${bData.liquid > 0 ? '+' + bData.liquid : bData.liquid}</span>
+                  <span class="text-xs text-slate-400 ml-1">pts líquidos</span>
+                </div>
+                <div class="text-right text-xs font-mono text-slate-400">
+                  <span class="text-emerald-400 font-semibold">${bData.certo}C</span> /
+                  <span class="text-rose-400 font-semibold">${bData.errado}E</span> /
+                  <span class="text-slate-500">${bData.branco}B</span>
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between text-[11px] text-slate-400 font-medium">
+                  <span>Corte do Edital</span>
+                  <span class="font-mono">${bData.liquid} / 10 pts</span>
+                </div>
+                <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                  <div class="h-full rounded-full transition-all duration-500 ${bData.passed ? 'bg-emerald-500' : 'bg-amber-500'}" style="width: ${progressPct}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Handle Quick Log
+    async function handleLogQuestion(event) {
+      event.preventDefault();
+
+      const subjectId = document.getElementById('log-subject').value;
+      const notes = document.getElementById('log-notes').value.trim();
+      const submitBtn = document.getElementById('log-submit-btn');
+      const feedback = document.getElementById('form-feedback');
+
+      if (!subjectId) {
+        alert('Por favor, selecione uma disciplina da PRF.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+
+      const payload = {
+        subject_id: parseInt(subjectId, 10),
+        result: currentResult,
+        difficulty: currentDifficulty,
+        notes: notes || null,
+        time_spent_seconds: 60
+      };
+
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/study/log', {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error('Falha ao registrar questão');
+        }
+
+        // Reset input notes
+        document.getElementById('log-notes').value = '';
+
+        // Show feedback
+        feedback.className = 'text-xs font-semibold text-emerald-400 block';
+        feedback.innerText = 'Item registrado com sucesso!';
+        setTimeout(() => { feedback.classList.add('hidden'); }, 3000);
+
+        // Immediate Refresh of Metrics and Caderno de Erros without full page reload
+        await loadMetrics();
+        await loadCadernoErros(false);
+
+      } catch (err) {
+        console.error('Erro ao registrar:', err);
+        feedback.className = 'text-xs font-semibold text-rose-400 block';
+        feedback.innerText = 'Erro ao salvar resolução.';
+        setTimeout(() => { feedback.classList.add('hidden'); }, 3000);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Load Caderno de Erros
+    async function loadCadernoErros(reviewedFilter) {
+      const tbody = document.getElementById('caderno-table-body');
+      const btnPending = document.getElementById('filter-pending-btn');
+      const btnReviewed = document.getElementById('filter-reviewed-btn');
+
+      if (reviewedFilter) {
+        btnReviewed.className = 'px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors';
+        btnPending.className = 'px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors';
+      } else {
+        btnPending.className = 'px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors';
+        btnReviewed.className = 'px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors';
+      }
+
+      tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Atualizando caderno de erros...</td></tr>`;
+
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const url = `/study/caderno-erros?reviewed=${reviewedFilter}`;
+        const res = await fetch(url, {
+          credentials: 'include',
+          headers
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const logs = await res.json();
+
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-400">
+                <div class="font-medium text-xs text-slate-300">Nenhum item encontrado nesta categoria.</div>
+                <div class="text-[11px] text-slate-500 mt-1">Quando você errar uma questão no simulado, ela aparecerá aqui para revisão.</div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(item => {
+          const subject = subjectsMap[item.subject_id];
+          const subjectName = subject ? subject.name : `Matéria #${item.subject_id}`;
+          const isTrânsito = subject && subject.block.includes('Bloco II');
+          const formattedDate = new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+          return `
+            <tr class="hover:bg-slate-800/40 transition-colors h-11">
+              <td class="py-2.5 px-4 font-semibold text-white">
+                <div class="flex items-center gap-1.5">
+                  ${isTrânsito ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Bloco II Trânsito"></span>' : ''}
+                  <span class="truncate max-w-[200px]">${subjectName}</span>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">
+                ${item.difficulty.toLowerCase()}
+              </td>
+              <td class="py-2.5 px-4 text-slate-300 max-w-md truncate" title="${item.notes || 'Sem anotação'}">
+                ${item.notes || '<span class="text-slate-600 italic">Sem anotação cadastrada</span>'}
+              </td>
+              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                ${formattedDate}
+              </td>
+              <td class="py-2.5 px-4 text-center">
+                <button 
+                  onclick="toggleReview(${item.id})"
+                  class="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                    item.reviewed 
+                      ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' 
+                      : 'bg-emerald-950/80 border border-emerald-700 text-emerald-300 hover:bg-emerald-900'
+                  }"
+                >
+                  ${item.reviewed ? 'Revisado' : 'Marcar Revisado'}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('Erro ao carregar caderno de erros:', err);
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-400">Erro ao carregar caderno de erros.</td></tr>`;
+      }
+    }
+
+    // Toggle Review Status
+    async function toggleReview(logId) {
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`/study/log/${logId}/review`, {
+          method: 'PATCH',
+          headers,
+          credentials: 'include'
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        // Refresh caderno
+        const isCurrentReviewed = document.getElementById('filter-reviewed-btn').classList.contains('bg-amber-400');
+        await loadCadernoErros(isCurrentReviewed);
+
+      } catch (err) {
+        console.error('Erro ao atualizar revisão:', err);
+      }
+    }
+  </script>
+</body>
+</html>
