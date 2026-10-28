@@ -29,7 +29,11 @@ def login_page(request: Request):
     token = request.cookies.get(settings.COOKIE_NAME)
     if token and token in ACTIVE_SESSIONS:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-    return templates.TemplateResponse("login.html", {"request": request, "app_name": settings.APP_NAME})
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={"app_name": settings.APP_NAME}
+    )
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request):
@@ -38,12 +42,10 @@ def dashboard_page(request: Request):
     Renderiza a interface completa e o JavaScript nativo consome as APIs com credenciais.
     """
     token = request.cookies.get(settings.COOKIE_NAME)
-    # Se não houver sessão ativa nem cookie, a rota visual pode ser exibida
-    # e o JavaScript cliente valida via fetch em /study/metrics (redirecionando se 401).
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="dashboard.html",
+        context={
             "app_name": settings.APP_NAME,
             "has_cookie_session": bool(token and token in ACTIVE_SESSIONS)
         }
