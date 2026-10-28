@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Tático Cebraspe - PRF Tracker</title>
+  <title>PRF Tracker - Sistema Tático de Métricas Cebraspe</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js para o gráfico de linha de evolução semanal idêntico ao Recharts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
@@ -15,370 +17,1142 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
 
-  <!-- Top Navigation Bar -->
+  <!-- Top Bar Navigation (Menus Superiores Idênticos ao Preview) -->
   <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-8 py-3.5">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-6">
       
-      <!-- Brand & Focus Area -->
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+      <!-- Brand Wordmark -->
+      <button onclick="switchTab('dashboard')" class="flex items-center gap-2.5 text-left group shrink-0 focus:outline-none">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:border-amber-400 transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
-        <div>
-          <span class="text-sm sm:text-base font-bold tracking-tight text-white">PRF Tracker</span>
-          <span class="text-slate-600 mx-1.5 hidden sm:inline">·</span>
-          <span class="text-xs text-amber-400 font-semibold font-mono hidden sm:inline">Foco: PRF 2027</span>
-        </div>
-      </div>
+        <span class="text-base font-bold tracking-tight text-white group-hover:text-amber-400 transition-colors whitespace-nowrap">
+          PRF Tracker
+        </span>
+      </button>
 
-      <!-- User Profile & Logout -->
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 pl-2">
-          <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs">
-            <span id="user-initial">C</span>
-          </div>
-          <div class="text-left hidden sm:block">
-            <div id="user-display-name" class="text-xs font-semibold text-slate-200 truncate max-w-[150px]">Candidato</div>
-            <div class="text-[10px] text-slate-500 font-mono">Edital Cebraspe</div>
-          </div>
-        </div>
-
+      <!-- Navigation Links (Menus Superiores) -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
         <button 
-          onclick="handleLogout()"
-          class="px-3 py-1.5 rounded-lg border border-slate-800 hover:border-rose-800 hover:bg-rose-950/30 text-xs text-slate-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 cursor-pointer"
-          title="Encerrar Sessão"
+          id="nav-dashboard" 
+          onclick="switchTab('dashboard')" 
+          class="whitespace-nowrap transition-colors text-amber-400 font-semibold"
+        >
+          Painel Geral
+        </button>
+        <button 
+          id="nav-caderno" 
+          onclick="switchTab('caderno')" 
+          class="whitespace-nowrap transition-colors text-slate-400 hover:text-white flex items-center gap-1.5"
         >
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
           </svg>
-          <span class="hidden sm:inline">Sair</span>
+          Caderno de Erros
         </button>
+        <button 
+          id="nav-simulador" 
+          onclick="switchTab('simulador')" 
+          class="whitespace-nowrap transition-colors text-slate-400 hover:text-white flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          Simulador 120 Itens
+        </button>
+        <button 
+          id="nav-ai" 
+          onclick="switchTab('ai')" 
+          class="whitespace-nowrap transition-colors text-slate-400 hover:text-white flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Diagnóstico IA
+        </button>
+      </nav>
+
+      <!-- Action & Profile Zone -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button 
+          onclick="openModal()" 
+          class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors shadow-sm whitespace-nowrap cursor-pointer"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Lançar Questões
+        </button>
+
+        <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
+          <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs">
+            <span id="user-initial">D</span>
+          </div>
+          <span id="user-display-name" class="text-xs font-medium text-slate-300 hidden sm:inline max-w-[100px] truncate">Douglas</span>
+          <button 
+            onclick="handleLogout()" 
+            class="text-slate-500 hover:text-rose-400 p-1 text-xs transition-colors" 
+            title="Encerrar Sessão"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
+    </div>
+
+    <!-- Mobile Sub-Navigation -->
+    <div class="flex md:hidden items-center gap-2 overflow-x-auto pt-3 pb-1 text-xs border-t border-slate-900 mt-2">
+      <button onclick="switchTab('dashboard')" id="mob-dashboard" class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 whitespace-nowrap">Painel</button>
+      <button onclick="switchTab('caderno')" id="mob-caderno" class="px-2.5 py-1 rounded text-slate-400 whitespace-nowrap">Caderno de Erros</button>
+      <button onclick="switchTab('simulador')" id="mob-simulador" class="px-2.5 py-1 rounded text-slate-400 whitespace-nowrap">Simulador</button>
+      <button onclick="switchTab('ai')" id="mob-ai" class="px-2.5 py-1 rounded text-slate-400 whitespace-nowrap">Diagnóstico IA</button>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
-    <!-- KPI Section: Cebraspe Liquid Score Highlight -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Candidate Header Sub-Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-900 text-xs text-slate-400">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-semibold text-white" id="subbar-user">Douglas Lima</span>
+        <span class="text-slate-600">·</span>
+        <span class="text-amber-400 font-medium">Alvo: Polícia Rodoviária Federal (PRF 2027)</span>
+        <span class="text-slate-600">·</span>
+        <span>Meta Diária: 50 questões</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-slate-500">Regra Oficial:</span>
+        <span class="font-mono text-slate-300 font-semibold">Cebraspe Líquido (1E anula 1C)</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: PAINEL GERAL (DASHBOARD)            -->
+    <!-- ========================================== -->
+    <div id="tab-content-dashboard" class="space-y-6">
       
-      <!-- 1. Pontuação Líquida Cebraspe -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
-        <div class="flex items-center justify-between text-xs text-slate-400">
-          <span>Pontuação Líquida Real</span>
-          <span class="font-mono text-slate-500 text-[11px]">Certas - Erradas</span>
+      <!-- Ciclo de Estudo / Cronômetro Ativo -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white uppercase tracking-wider">Ciclo de Estudo Ativo</span>
+              <span class="text-slate-600">·</span>
+              <span id="timer-subject-display" class="text-xs text-amber-400 font-medium">Legislação de Trânsito</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-1">
+              <select id="timer-subject-select" onchange="updateTimerSubject()" class="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-xs text-slate-300 focus:outline-none focus:border-amber-400">
+                <option value="Trânsito">Legislação de Trânsito (Bloco II)</option>
+                <option value="Português">Língua Portuguesa (Bloco I)</option>
+                <option value="Penal">Direito Penal (Bloco III)</option>
+                <option value="Constitucional">Direito Constitucional (Bloco III)</option>
+                <option value="Física">Noções de Física (Bloco I)</option>
+                <option value="RLM">Raciocínio Lógico (Bloco I)</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div class="my-3 flex items-baseline gap-2">
-          <span id="metric-liquid" class="text-4xl font-extrabold tracking-tight text-white font-mono tabular-nums">0</span>
-          <span class="text-xs text-slate-400 font-medium">pts líquidos</span>
+
+        <div class="flex items-center gap-4">
+          <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-[11px]">
+            <button onclick="setTimerMode(25)" id="tm-25" class="px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold transition-colors">25m</button>
+            <button onclick="setTimerMode(50)" id="tm-50" class="px-2.5 py-1 rounded text-slate-400 transition-colors">50m</button>
+            <button onclick="setTimerMode(0)" id="tm-stop" class="px-2.5 py-1 rounded text-slate-400 transition-colors">Livre</button>
+          </div>
+
+          <div id="timer-clock" class="font-mono text-2xl font-extrabold text-white tracking-wider tabular-nums">
+            25:00
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="toggleTimer()" id="timer-btn" class="p-2 rounded-lg font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors cursor-pointer" title="Iniciar">
+              <svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </button>
+            <button onclick="resetTimer()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer" title="Reiniciar">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+            </button>
+          </div>
         </div>
-        <div id="metric-cutoff-status" class="text-xs text-slate-400 flex items-center gap-1.5">
-          <span class="text-amber-400 font-medium">Meta Edital: ≥ 48 pts</span>
+
+        <button onclick="openModal()" class="px-3 py-1.5 rounded-lg border border-slate-700 hover:border-amber-400 text-xs text-slate-300 hover:text-amber-300 flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Lançar Bloco Resolvido
+        </button>
+      </div>
+
+      <!-- Placar de Métricas Cebraspe -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Pontuação Líquida</span>
+            <span class="font-mono text-slate-500 text-[11px]">Certo - Errado</span>
+          </div>
+          <div class="my-3 flex items-baseline gap-2">
+            <span id="metric-liquid" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono tabular-nums">+68</span>
+            <span class="text-xs text-slate-400 font-medium">/ 120 itens</span>
+          </div>
+          <div id="metric-cutoff-status" class="text-xs text-slate-400 flex items-center gap-1.5">
+            <span class="text-emerald-400 font-medium">Acima do corte geral (≥ 48 pts)</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div class="text-xs text-slate-400">Distribuição de Itens</div>
+          <div class="my-2.5 grid grid-cols-3 gap-2">
+            <div class="text-center p-2 rounded-lg bg-emerald-950/40 border border-emerald-900/50">
+              <div class="text-[10px] text-emerald-400 font-medium">Certas</div>
+              <div id="metric-certo" class="text-lg font-bold text-emerald-300 font-mono tabular-nums mt-0.5">88</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
+              <div class="text-[10px] text-rose-400 font-medium">Erradas</div>
+              <div id="metric-errado" class="text-lg font-bold text-rose-300 font-mono tabular-nums mt-0.5">20</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
+              <div class="text-[10px] text-slate-400 font-medium">Branco</div>
+              <div id="metric-branco" class="text-lg font-bold text-slate-300 font-mono tabular-nums mt-0.5">12</div>
+            </div>
+          </div>
+          <div class="text-xs text-slate-400 flex items-center justify-between">
+            <span>Total respondidas</span>
+            <span id="metric-total" class="font-mono tabular-nums text-slate-300 font-semibold">120</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Eficiência Líquida</span>
+            <span class="font-mono text-slate-500 text-[11px]">% Líquida</span>
+          </div>
+          <div class="my-3 flex items-baseline gap-2">
+            <span id="metric-efficiency" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-mono tabular-nums">63.0%</span>
+            <span id="metric-accuracy" class="text-xs text-slate-500 font-mono tabular-nums">(bruto: 81.5%)</span>
+          </div>
+          <div class="text-xs text-slate-400">
+            <span id="metric-penalties">20 erros anularam 20 acertos</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Status do Edital PRF</span>
+            <span class="text-amber-400 font-mono text-[11px]">Cebraspe</span>
+          </div>
+          <div class="my-3">
+            <div id="metric-status-badge" class="text-lg font-bold text-white flex items-center gap-1.5">
+              <span class="text-emerald-400">Habilitado</span>
+            </div>
+          </div>
+          <div class="text-xs text-slate-400 flex items-center gap-2">
+            <span>Min. 10 por bloco</span>
+            <span>·</span>
+            <span>Min. 48 geral</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================================================== -->
+      <!-- GRÁFICO DE EVOLUÇÃO DE APROVEITAMENTO (CHART.JS)     -->
+      <!-- ==================================================== -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <span>Evolução do Aproveitamento Líquido Cebraspe</span>
+              </h3>
+              <span class="text-[11px] font-mono text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-800 px-1.5 py-0.5 rounded">
+                +14.2% no ciclo
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Progressão semanal do índice líquido: <span class="text-amber-300 font-mono">(Certas - Erradas) ÷ Marcadas</span>.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
+              <button onclick="setChartMetric('both')" id="cm-both" class="px-2.5 py-1 rounded font-medium transition-colors bg-amber-400 text-slate-950 font-bold">Líquido & Bruto</button>
+              <button onclick="setChartMetric('liquid')" id="cm-liquid" class="px-2.5 py-1 rounded font-medium transition-colors text-slate-400">Apenas Líquido</button>
+            </div>
+            <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
+              <button onclick="setChartPeriod('8w')" id="cp-8w" class="px-2 py-1 rounded font-medium transition-colors bg-slate-800 text-white font-bold">8 Semanas</button>
+              <button onclick="setChartPeriod('4w')" id="cp-4w" class="px-2 py-1 rounded font-medium transition-colors text-slate-500">4 Semanas</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-1">
+          <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Eficiência Atual</div>
+            <div class="text-xl font-bold font-mono text-amber-400 tabular-nums mt-0.5">68.0%</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Meta PRF: ≥ 65%</div>
+          </div>
+          <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Ganhos no Período</div>
+            <div class="text-xl font-bold font-mono text-emerald-400 tabular-nums mt-0.5">+14.2 pp</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">De 53.8% a 68.0%</div>
+          </div>
+          <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Acerto Bruto Atual</div>
+            <div class="text-xl font-bold font-mono text-cyan-400 tabular-nums mt-0.5">84.0%</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Sem desconto de erros</div>
+          </div>
+          <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="text-[10px] text-slate-400 uppercase font-semibold">Custo de Erros</div>
+            <div class="text-xl font-bold font-mono text-rose-400 tabular-nums mt-0.5">-16.0 pp</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Pontos anulados por erro</div>
+          </div>
+        </div>
+
+        <!-- Canvas Chart -->
+        <div class="w-full h-72 relative">
+          <canvas id="evolutionChartCanvas"></canvas>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-[11px] text-slate-400">
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-1 bg-amber-400 rounded-full"></span>
+              <span class="text-slate-300 font-medium">Linha Âmbar:</span>
+              <span>Aproveitamento Líquido Real</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-1 border-b border-cyan-400 border-dashed"></span>
+              <span class="text-slate-300 font-medium">Linha Ciano:</span>
+              <span>Acertos Brutos (sem desconto)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-0.5 bg-emerald-500"></span>
+              <span>Corte Seguro PRF (65%)</span>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-500 font-mono">
+            Gap entre as linhas = pontos destruídos por chutes errados
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Desempenho por Blocos Oficiais da PRF -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            <span>Desempenho por Blocos Oficiais da PRF</span>
+            <span class="text-xs text-slate-400 font-normal hidden sm:inline">(Exigência: Mínimo de 10 pts líquidos em cada bloco)</span>
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="blocks-container">
+          <!-- Renderizado via JS -->
         </div>
       </div>
 
-      <!-- 2. Distribuição Cebraspe (Certo / Errado / Branco) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
-        <div class="text-xs text-slate-400">Distribuição de Itens</div>
-        <div class="my-2 grid grid-cols-3 gap-2">
-          <div class="text-center p-2 rounded-lg bg-emerald-950/40 border border-emerald-900/50">
-            <div class="text-[10px] text-emerald-400 font-medium">Certas</div>
-            <div id="metric-certo" class="text-lg font-bold text-emerald-300 font-mono tabular-nums mt-0.5">0</div>
+      <!-- Matriz de Disciplinas & Pesos -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md">
+        <div class="px-5 py-3.5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60">
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Matriz de Disciplinas & Pesos Oficiais da PRF</h3>
+            <p class="text-xs text-slate-400 mt-0.5">14 matérias mapeadas com saldo líquido e taxa de penalização Cebraspe.</p>
           </div>
-          <div class="text-center p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
-            <div class="text-[10px] text-rose-400 font-medium">Erradas</div>
-            <div id="metric-errado" class="text-lg font-bold text-rose-300 font-mono tabular-nums mt-0.5">0</div>
-          </div>
-          <div class="text-center p-2 rounded-lg bg-slate-800/50 border border-slate-700/50">
-            <div class="text-[10px] text-slate-400 font-medium">Branco</div>
-            <div id="metric-branco" class="text-lg font-bold text-slate-300 font-mono tabular-nums mt-0.5">0</div>
+          <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs self-start sm:self-auto">
+            <button onclick="filterTable('all')" id="ft-all" class="px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold transition-colors">Todas</button>
+            <button onclick="filterTable('Bloco II')" id="ft-b2" class="px-2.5 py-1 rounded font-medium text-slate-400 transition-colors">Bloco II (Trânsito)</button>
+            <button onclick="filterTable('Bloco I')" id="ft-b1" class="px-2.5 py-1 rounded font-medium text-slate-400 transition-colors">Bloco I</button>
+            <button onclick="filterTable('Bloco III')" id="ft-b3" class="px-2.5 py-1 rounded font-medium text-slate-400 transition-colors">Bloco III</button>
           </div>
         </div>
-        <div class="text-xs text-slate-400 flex items-center justify-between">
-          <span>Total de Itens</span>
-          <span id="metric-total" class="font-mono tabular-nums text-slate-200 font-semibold">0</span>
-        </div>
-      </div>
 
-      <!-- 3. Eficiência Líquida e Retenção -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
-        <div class="flex items-center justify-between text-xs text-slate-400">
-          <span>Eficiência Líquida</span>
-          <span class="font-mono text-slate-500 text-[11px]">% Líquida</span>
-        </div>
-        <div class="my-3 flex items-baseline gap-2">
-          <span id="metric-efficiency" class="text-4xl font-extrabold tracking-tight text-amber-400 font-mono tabular-nums">0%</span>
-          <span id="metric-accuracy" class="text-xs text-slate-500 font-mono tabular-nums">(bruto: 0%)</span>
-        </div>
-        <div class="text-xs text-slate-400">
-          <span id="metric-penalties">0 erros anularam 0 acertos</span>
-        </div>
-      </div>
-
-      <!-- 4. Status Eliminatório por Bloco -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
-        <div class="flex items-center justify-between text-xs text-slate-400">
-          <span>Status do Concurso</span>
-          <span class="font-mono text-slate-500 text-[11px]">Cebraspe PRF</span>
-        </div>
-        <div class="my-3">
-          <div id="metric-status-badge" class="text-base font-bold text-white flex items-center gap-1.5">
-            <span class="text-amber-400">Calculando...</span>
-          </div>
-        </div>
-        <div class="text-xs text-slate-400 flex items-center gap-1">
-          <span>Mínimos: 10 pts por bloco</span>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 bg-slate-950/40 text-[11px] font-semibold tracking-wider uppercase">
+                <th class="py-3 px-4">Disciplina</th>
+                <th class="py-3 px-3">Bloco</th>
+                <th class="py-3 px-3 text-right">Peso</th>
+                <th class="py-3 px-3 text-right">Resolvidas</th>
+                <th class="py-3 px-3 text-center">C / E / B</th>
+                <th class="py-3 px-3 text-right">Pontos Líquidos</th>
+                <th class="py-3 px-3 text-right">Precisão</th>
+                <th class="py-3 px-4 text-center">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="subjects-table-body" class="divide-y divide-slate-800/60">
+              <!-- Populado dinamicamente -->
+            </tbody>
+          </table>
         </div>
       </div>
 
     </div>
 
-    <!-- Quick Question Logger Form -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 sm:p-6 shadow-md">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+    <!-- ========================================== -->
+    <!-- TAB 2: CADERNO DE ERROS                   -->
+    <!-- ========================================== -->
+    <div id="tab-content-caderno" class="space-y-5 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
-            <span>Lançamento Rápido de Questão</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-0.5">Registre resoluções individuais e mapeie pegadinhas da banca Cebraspe.</p>
-        </div>
-        <div id="form-feedback" class="text-xs font-semibold hidden"></div>
-      </div>
-
-      <form id="log-form" onsubmit="handleLogQuestion(event)" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          <!-- Subject Selector -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Disciplina da PRF</label>
-            <select id="log-subject" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
-              <option value="">Carregando disciplinas...</option>
-            </select>
-          </div>
-
-          <!-- Result Selector -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Resultado do Item</label>
-            <div class="grid grid-cols-3 gap-1.5">
-              <button type="button" onclick="setLogResult('CERTO')" id="btn-res-certo" class="py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300">
-                CERTO (+1)
-              </button>
-              <button type="button" onclick="setLogResult('ERRADO')" id="btn-res-errado" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
-                ERRADO (-1)
-              </button>
-              <button type="button" onclick="setLogResult('BRANCO')" id="btn-res-branco" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
-                BRANCO (0)
-              </button>
-            </div>
-          </div>
-
-          <!-- Difficulty Selector -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Dificuldade Percebida</label>
-            <div class="grid grid-cols-3 gap-1.5">
-              <button type="button" onclick="setLogDifficulty('FACIL')" id="btn-diff-facil" class="py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                Fácil
-              </button>
-              <button type="button" onclick="setLogDifficulty('MEDIO')" id="btn-diff-medio" class="py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300">
-                Média
-              </button>
-              <button type="button" onclick="setLogDifficulty('DIFICIL')" id="btn-diff-dificil" class="py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">
-                Difícil
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Notes / Cebraspe Trap Input -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
-            <span>Anotação / Pegadinha da Banca (alimenta seu Caderno de Erros)</span>
-            <span class="text-[10px] text-slate-500 font-normal">Recomendado para itens errados</span>
-          </label>
-          <input 
-            type="text" 
-            id="log-notes" 
-            placeholder="Ex: Art. 306 CTB: embriaguez ao volante é crime de perigo abstrato, não exige perigo concreto."
-            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-400"
-          >
-        </div>
-
-        <!-- Submit Button -->
-        <div class="flex justify-end pt-1">
-          <button 
-            type="submit" 
-            id="log-submit-btn"
-            class="px-5 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-          >
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Salvar Resolução</span>
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- Official PRF Blocks Breakdown Section -->
-    <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-bold text-white tracking-tight">Desempenho nos Blocos Oficiais da PRF</h2>
-        <span class="text-xs text-slate-400 font-mono">Exigência: ≥ 10 pts líquidos em cada bloco</span>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="blocks-container">
-        <!-- Rendered dynamically by JavaScript -->
-        <div class="col-span-3 text-center py-8 text-xs text-slate-500">Carregando métricas dos blocos...</div>
-      </div>
-    </div>
-
-    <!-- Caderno de Erros (Mistake Notebook) Section -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md">
-      
-      <div class="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/80">
-        <div>
-          <h2 class="text-sm font-bold text-white tracking-tight flex items-center gap-2">
             <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
             <span>Caderno de Erros & Pegadinhas Cebraspe</span>
           </h2>
-          <p class="text-xs text-slate-400 mt-0.5">Revise as questões erradas e marque como superadas para fixar os conceitos.</p>
+          <p class="text-xs text-slate-400 mt-0.5">O segredo da aprovação na PRF: mapear os motivos de cada erro para blindar sua pontuação líquida.</p>
         </div>
+        <button onclick="openModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap cursor-pointer">
+          Registrar Novo Erro
+        </button>
+      </div>
 
-        <div class="flex items-center gap-2 text-xs">
-          <button 
-            onclick="loadCadernoErros(false)" 
-            id="filter-pending-btn"
-            class="px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors"
+      <!-- Filtros e Busca -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center gap-3">
+        <div class="relative flex-1 min-w-[200px]">
+          <input 
+            type="text" 
+            id="caderno-search" 
+            oninput="filterCadernoSearch()" 
+            placeholder="Buscar por pegadinha, artigo ou matéria..." 
+            class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400"
           >
-            Pendentes
-          </button>
-          <button 
-            onclick="loadCadernoErros(true)" 
-            id="filter-reviewed-btn"
-            class="px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors"
-          >
-            Revisadas
-          </button>
+        </div>
+        <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-xs">
+          <button onclick="loadCadernoErros(false)" id="filter-pending-btn" class="px-3 py-1 rounded-md font-medium bg-amber-400 text-slate-950">Pendentes</button>
+          <button onclick="loadCadernoErros(true)" id="filter-reviewed-btn" class="px-3 py-1 rounded-md font-medium text-slate-400 hover:text-white">Revisadas</button>
         </div>
       </div>
 
-      <!-- Caderno de Erros Table -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead>
-            <tr class="border-b border-slate-800 text-slate-400 bg-slate-950/40 text-[11px] font-semibold tracking-wider uppercase">
-              <th class="py-3 px-4">Disciplina</th>
-              <th class="py-3 px-3">Dificuldade</th>
-              <th class="py-3 px-4">Pegadinha / Anotação da Banca</th>
-              <th class="py-3 px-3">Data</th>
-              <th class="py-3 px-4 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody id="caderno-table-body" class="divide-y divide-slate-800/60">
-            <tr>
-              <td colspan="5" class="py-8 text-center text-slate-500">Carregando caderno de erros...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Tabela Caderno -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 bg-slate-950/40 text-[11px] font-semibold tracking-wider uppercase">
+                <th class="py-3 px-4">Disciplina</th>
+                <th class="py-3 px-3">Dificuldade</th>
+                <th class="py-3 px-4">Pegadinha / Anotação da Banca</th>
+                <th class="py-3 px-3">Data</th>
+                <th class="py-3 px-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="caderno-table-body" class="divide-y divide-slate-800/60">
+              <!-- Itens carregados via API -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: SIMULADOR 120 ITENS CEBRASPE        -->
+    <!-- ========================================== -->
+    <div id="tab-content-simulador" class="space-y-6 hidden">
+      <div>
+        <h2 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+          <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+          <span>Simulador de Prova 120 Itens Cebraspe PRF</span>
+        </h2>
+        <p class="text-xs text-slate-400 mt-0.5">Ajuste as estimativas por bloco e veja o impacto matemático de deixar itens em branco versus arriscar chutes errados.</p>
       </div>
 
+      <!-- Placar do Simulador -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+          <div class="flex items-center gap-6">
+            <div class="text-center sm:text-left">
+              <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Pontuação Líquida Projetada</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="sim-liquid-total" class="text-4xl font-extrabold text-white font-mono tabular-nums">+68</span>
+                <span class="text-xs text-slate-400">/ 120 pontos possíveis</span>
+              </div>
+            </div>
+            <div class="hidden sm:block h-10 w-px bg-slate-800"></div>
+            <div class="flex items-center gap-4 text-xs font-mono">
+              <div>
+                <span id="sim-certo-sum" class="text-emerald-400 font-bold text-sm tabular-nums">77</span>
+                <div class="text-slate-400 text-[10px]">Certas</div>
+              </div>
+              <div>
+                <span id="sim-errado-sum" class="text-rose-400 font-bold text-sm tabular-nums">27</span>
+                <div class="text-slate-400 text-[10px]">Erradas</div>
+              </div>
+              <div>
+                <span id="sim-branco-sum" class="text-slate-300 font-bold text-sm tabular-nums">16</span>
+                <div class="text-slate-400 text-[10px]">Branco</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="sim-status-box" class="w-full lg:w-auto">
+            <div class="px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-700 text-emerald-300 text-xs flex items-center gap-2">
+              <span class="font-bold">Aprovado na Prova Objetiva (≥ 48 pts)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inputs por Bloco -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Bloco I -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white">Bloco I: Gerais (55 itens)</h3>
+            <span id="sim-b1-liquid" class="text-[11px] font-mono text-emerald-400 font-bold">+18 pts</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <label class="text-emerald-400 text-[10px]">Certo</label>
+              <input type="number" id="sim-b1-c" value="32" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-rose-400 text-[10px]">Errado</label>
+              <input type="number" id="sim-b1-e" value="14" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-slate-400 text-[10px]">Branco</label>
+              <input type="number" id="sim-b1-b" value="9" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500">Exigência: ≥ 10 pts</div>
+        </div>
+
+        <!-- Bloco II - Trânsito -->
+        <div class="bg-slate-900 border-2 border-amber-500/50 rounded-xl p-4 space-y-3 shadow-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-amber-300">Bloco II: Trânsito (30 itens)</h3>
+            <span id="sim-b2-liquid" class="text-[11px] font-mono text-amber-400 font-bold">+17 pts</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <label class="text-emerald-400 text-[10px]">Certo</label>
+              <input type="number" id="sim-b2-c" value="22" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-rose-400 text-[10px]">Errado</label>
+              <input type="number" id="sim-b2-e" value="5" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-slate-400 text-[10px]">Branco</label>
+              <input type="number" id="sim-b2-b" value="3" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+          </div>
+          <div class="text-[10px] text-amber-400/80">Exigência: ≥ 10 pts (Peso 10)</div>
+        </div>
+
+        <!-- Bloco III -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white">Bloco III: Direito (35 itens)</h3>
+            <span id="sim-b3-liquid" class="text-[11px] font-mono text-emerald-400 font-bold">+15 pts</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <label class="text-emerald-400 text-[10px]">Certo</label>
+              <input type="number" id="sim-b3-c" value="23" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-rose-400 text-[10px]">Errado</label>
+              <input type="number" id="sim-b3-e" value="8" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+            <div>
+              <label class="text-slate-400 text-[10px]">Branco</label>
+              <input type="number" id="sim-b3-b" value="4" oninput="recalcSimulator()" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 font-mono text-center text-white">
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500">Exigência: ≥ 10 pts</div>
+        </div>
+      </div>
+
+      <!-- Laboratório O Poder de Deixar em Branco -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/30 border border-slate-800 rounded-xl p-5">
+        <h3 class="text-sm font-bold text-white mb-1">Laboratório Estratégico: O Poder de Deixar em Branco</h3>
+        <p class="text-xs text-slate-400 mb-4 max-w-2xl">No Cebraspe, cada questão duvidosa que você chuta e erra custa 2 pontos em relação a acertar e 1 ponto em relação a não marcar nada!</p>
+        
+        <div class="space-y-2 max-w-md">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300">Simular deixar em branco <strong id="slider-val">0</strong> itens duvidosos:</span>
+            <span id="slider-bonus" class="font-mono text-amber-400 font-bold">+0 pts líquidos</span>
+          </div>
+          <input type="range" id="blank-slider" min="0" max="20" value="0" oninput="updateBlankSlider()" class="w-full accent-amber-400">
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: DIAGNÓSTICO & TREINO IA             -->
+    <!-- ========================================== -->
+    <div id="tab-content-ai" class="space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>Inteligência Cebraspe & Treinamento Estratégico</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Diagnóstico pedagógico cirúrgico e bateria de itens inéditos no padrão oficial da PRF.</p>
+        </div>
+
+        <button onclick="requestAiDiagnostic()" id="btn-run-ai" class="px-4 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors flex items-center gap-2 cursor-pointer shadow-sm">
+          <span>Auditar Estudos com IA</span>
+        </button>
+      </div>
+
+      <!-- Painel de Resposta da IA -->
+      <div id="ai-response-container" class="space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+          <div class="text-xs text-slate-400 font-semibold flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Diagnóstico Geral do Concurso</span>
+          </div>
+          <p id="ai-diag-text" class="text-xs text-slate-200 leading-relaxed">
+            Seu saldo líquido atual demonstra excelente curva de aprendizado, com aproveitamento acima da média das primeiras turmas. Para garantir a vaga sem depender de anulações, mantenha o foco no Bloco II (CTB) e limite chutes cegos nas matérias do Bloco I.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-900 border border-amber-500/30 rounded-xl p-5 space-y-2 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20">
+            <div class="text-xs font-bold text-amber-400">Foco Crítico: Bloco II (Legislação de Trânsito)</div>
+            <p id="ai-b2-text" class="text-xs text-slate-200 leading-relaxed">
+              O Bloco II representa 25% da prova total com peso 10. Você não pode se dar ao luxo de perder pontos aqui com pegadinhas de infrações gravíssimas com fator multiplicador ou inversão entre medidas administrativas e penalidades.
+            </p>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+            <div class="text-xs font-bold text-white">Estratégia Matemática de Branco vs Chute</div>
+            <p id="ai-blank-text" class="text-xs text-slate-300 leading-relaxed">
+              Com sua precisão atual, a regra Cebraspe é categórica: nunca dê chute cego (50/50). Se você não consegue eliminar com 100% de certeza ao menos um elemento absurdo do enunciado, deixe o item em branco para blindar sua pontuação líquida.
+            </p>
+          </div>
+        </div>
+
+        <!-- Treino Rápido de 3 Itens Cebraspe -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Treino Rápido Cebraspe: Legislação de Trânsito</h3>
+            <span class="text-[11px] text-slate-500 font-mono">3 itens selecionados</span>
+          </div>
+
+          <!-- Item 1 -->
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-3">
+            <div class="flex justify-between text-xs text-slate-400">
+              <span class="font-bold text-amber-400 font-mono">Item 01</span>
+              <span>CTB - Crimes de Trânsito</span>
+            </div>
+            <p class="text-xs text-slate-200 leading-relaxed">
+              Para a configuração do crime previsto no art. 306 do CTB (condução sob influência de álcool), é desnecessária a constatação de manobra perigosa pelo motorista, bastando a comprovação de concentração alcoólica mínima legal.
+            </p>
+            <div class="flex gap-2" id="drill-ans-1">
+              <button onclick="answerDrill(1, 'CERTO', true, 'Correto! O crime do art. 306 do CTB é de perigo abstrato, conforme jurisprudência uníssona do STJ (Tema 1.054).')" class="px-3 py-1 bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded text-xs font-bold text-slate-300 hover:text-emerald-400">CERTO</button>
+              <button onclick="answerDrill(1, 'ERRADO', true, 'Correto! O crime do art. 306 do CTB é de perigo abstrato, conforme jurisprudência uníssona do STJ (Tema 1.054).')" class="px-3 py-1 bg-slate-900 border border-slate-800 hover:border-rose-500 rounded text-xs font-bold text-slate-300 hover:text-rose-400">ERRADO</button>
+            </div>
+            <div id="drill-feedback-1" class="hidden text-xs p-2.5 rounded bg-slate-900 border border-slate-800"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </main>
 
+  <!-- ========================================== -->
+  <!-- MODAL DE LANÇAMENTO DE QUESTÕES            -->
+  <!-- ========================================== -->
+  <div id="modal-log" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative text-slate-100">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+
+      <div class="mb-5">
+        <h2 class="text-lg font-bold text-white tracking-tight">Registrar Resolução de Questões</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Métricas estritas Cebraspe: 1 questão errada anula 1 questão certa.</p>
+      </div>
+
+      <!-- Modo de Lançamento (Individual vs Lote) -->
+      <div class="flex bg-slate-950 p-1 rounded-lg border border-slate-800 mb-4">
+        <button type="button" onclick="setModalMode('single')" id="mm-single" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors bg-amber-400 text-slate-950">
+          Questão Individual
+        </button>
+        <button type="button" onclick="setModalMode('batch')" id="mm-batch" class="flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors text-slate-400 hover:text-white">
+          Lançamento em Lote (Bateria)
+        </button>
+      </div>
+
+      <form id="modal-log-form" onsubmit="submitModalLog(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Disciplina da PRF</label>
+          <select id="modal-subject-select" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400">
+            <!-- Populado via JS -->
+          </select>
+        </div>
+
+        <!-- Modo Individual -->
+        <div id="modal-single-section" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Resultado Cebraspe</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setModalResult('CERTO')" id="m-btn-certo" class="py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300">CERTO (+1)</button>
+              <button type="button" onclick="setModalResult('ERRADO')" id="m-btn-errado" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400">ERRADO (-1)</button>
+              <button type="button" onclick="setModalResult('BRANCO')" id="m-btn-branco" class="py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400">BRANCO (0)</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Dificuldade Percebida</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" onclick="setModalDiff('FACIL')" id="m-diff-facil" class="py-1.5 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">Fácil</button>
+              <button type="button" onclick="setModalDiff('MEDIO')" id="m-diff-medio" class="py-1.5 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300">Média</button>
+              <button type="button" onclick="setModalDiff('DIFICIL')" id="m-diff-dificil" class="py-1.5 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400">Difícil</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex justify-between">
+              <span>Caderno de Erros / Pegadinha da Banca</span>
+              <span class="text-[10px] text-slate-500">Recomendado para erros</span>
+            </label>
+            <textarea id="modal-notes" rows="3" placeholder="Ex: Art. 306 CTB: embriaguez é perigo abstrato. Atenção à pegadinha da banca..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400 resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Modo Lote (Bateria) -->
+        <div id="modal-batch-section" class="space-y-4 hidden">
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-emerald-400 mb-1">Certas (+1)</label>
+              <input type="number" id="m-batch-c" min="0" value="7" oninput="updateBatchNet()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-center text-sm font-bold text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-rose-400 mb-1">Erradas (-1)</label>
+              <input type="number" id="m-batch-e" min="0" value="2" oninput="updateBatchNet()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-center text-sm font-bold text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Branco (0)</label>
+              <input type="number" id="m-batch-b" min="0" value="1" oninput="updateBatchNet()" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 font-mono text-center text-sm font-bold text-white">
+            </div>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Saldo Líquido nesta Bateria:</span>
+            <span id="batch-net-preview" class="font-mono text-base font-bold text-white">+5 pts</span>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Anotação Geral da Bateria (opcional)</label>
+            <textarea id="modal-batch-notes" rows="2" placeholder="Ex: Simulado de Trânsito 10 questões Cebraspe 2024" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-400 resize-none"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors">Cancelar</button>
+          <button type="submit" id="modal-submit-btn" class="px-5 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
+            Confirmar Lançamento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Footer -->
-  <footer class="mt-auto border-t border-slate-900 bg-slate-950 px-6 py-4 text-center text-xs text-slate-500 font-mono">
-    PRF Tracker · Sistema Tático de Métricas Cebraspe · Underline Tech
+  <footer class="mt-auto border-t border-slate-900 bg-slate-950 px-6 py-5 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400 font-medium">PRF Tracker · Underline Tech</span>
+        <span>—</span>
+        <span>Edital Cebraspe Polícia Rodoviária Federal</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <button onclick="switchTab('dashboard')" class="hover:text-amber-400 transition-colors">Painel</button>
+        <button onclick="switchTab('caderno')" class="hover:text-amber-400 transition-colors">Caderno de Erros</button>
+        <button onclick="switchTab('simulador')" class="hover:text-amber-400 transition-colors">Simulador</button>
+        <button onclick="switchTab('ai')" class="hover:text-amber-400 transition-colors">IA Cebraspe</button>
+      </div>
+    </div>
   </footer>
 
   <!-- Native JavaScript Application Logic -->
   <script>
     // State
-    let currentResult = 'CERTO';
-    let currentDifficulty = 'MEDIO';
-    let subjectsCache = [];
+    let currentTab = 'dashboard';
+    let currentModalMode = 'single';
+    let modalResult = 'CERTO';
+    let modalDiff = 'MEDIO';
+    let subjects = [];
     let subjectsMap = {};
+    let evolutionChartInstance = null;
 
-    // Initial Load
+    // Timer State
+    let timerDuration = 25 * 60;
+    let timerRemaining = 25 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+    let isStopwatch = false;
+    let stopwatchSeconds = 0;
+
+    // Baseline historical progression for the chart
+    const historicalWeeks = [
+      { week: 'Sem 01', liquidPct: 18.8, grossPct: 59.4, liquidScore: 12 },
+      { week: 'Sem 02', liquidPct: 36.8, grossPct: 68.4, liquidScore: 28 },
+      { week: 'Sem 03', liquidPct: 51.1, grossPct: 75.6, liquidScore: 46 },
+      { week: 'Sem 04', liquidPct: 58.3, grossPct: 79.2, liquidScore: 56 },
+      { week: 'Sem 05', liquidPct: 63.1, grossPct: 81.6, liquidScore: 65 },
+      { week: 'Sem 06', liquidPct: 67.3, grossPct: 83.6, liquidScore: 74 },
+      { week: 'Sem 07', liquidPct: 71.9, grossPct: 86.0, liquidScore: 82 },
+      { week: 'Sem 08 (Atual)', liquidPct: 68.0, grossPct: 84.0, liquidScore: 68 }
+    ];
+
     document.addEventListener('DOMContentLoaded', () => {
-      // Set display name from localStorage if available
       const storedName = localStorage.getItem('user_name');
       if (storedName) {
-        document.getElementById('user-display-name').innerText = storedName;
+        document.getElementById('user-display-name').innerText = storedName.split(' ')[0];
+        document.getElementById('subbar-user').innerText = storedName;
         document.getElementById('user-initial').innerText = storedName.charAt(0).toUpperCase();
       }
 
+      initChart();
       loadSubjects();
       loadMetrics();
       loadCadernoErros(false);
+      recalcSimulator();
     });
 
-    // Handle Logout
-    async function handleLogout() {
-      try {
-        await fetch('/auth/logout', {
-          method: 'POST',
-          credentials: 'include'
-        });
-      } catch (e) {
-        console.error(e);
+    // Tab Switching
+    function switchTab(tab) {
+      currentTab = tab;
+      const tabs = ['dashboard', 'caderno', 'simulador', 'ai'];
+      
+      tabs.forEach(t => {
+        const content = document.getElementById(`tab-content-${t}`);
+        const nav = document.getElementById(`nav-${t}`);
+        const mob = document.getElementById(`mob-${t}`);
+
+        if (t === tab) {
+          content.classList.remove('hidden');
+          nav.className = 'whitespace-nowrap transition-colors text-amber-400 font-semibold flex items-center gap-1.5';
+          mob.className = 'px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 whitespace-nowrap';
+        } else {
+          content.classList.add('hidden');
+          nav.className = 'whitespace-nowrap transition-colors text-slate-400 hover:text-white flex items-center gap-1.5';
+          mob.className = 'px-2.5 py-1 rounded text-slate-400 whitespace-nowrap';
+        }
+      });
+
+      if (tab === 'caderno') {
+        loadCadernoErros(false);
       }
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user_name');
-      window.location.href = '/login';
     }
 
-    // Toggle Form Buttons
-    function setLogResult(res) {
-      currentResult = res;
-      const bCerto = document.getElementById('btn-res-certo');
-      const bErrado = document.getElementById('btn-res-errado');
-      const bBranco = document.getElementById('btn-res-branco');
+    // Chart.js Initialization & Logic
+    function initChart() {
+      const ctx = document.getElementById('evolutionChartCanvas').getContext('2d');
+      const labels = historicalWeeks.map(w => w.week);
+      const liquidData = historicalWeeks.map(w => w.liquidPct);
+      const grossData = historicalWeeks.map(w => w.grossPct);
 
-      bCerto.className = res === 'CERTO'
-        ? 'py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300'
-        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
-
-      bErrado.className = res === 'ERRADO'
-        ? 'py-2 text-xs font-bold rounded-lg border border-rose-500 bg-rose-950/80 text-rose-300'
-        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
-
-      bBranco.className = res === 'BRANCO'
-        ? 'py-2 text-xs font-bold rounded-lg border border-slate-500 bg-slate-800 text-slate-200'
-        : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700';
+      evolutionChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Eficiência Líquida Cebraspe (%)',
+              data: liquidData,
+              borderColor: '#fbbf24', // amber-400
+              backgroundColor: 'rgba(251, 191, 36, 0.1)',
+              borderWidth: 3,
+              pointBackgroundColor: '#fbbf24',
+              pointBorderColor: '#0f172a',
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.3,
+              fill: false
+            },
+            {
+              label: 'Acerto Bruto (%)',
+              data: grossData,
+              borderColor: '#38bdf8', // cyan-400
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              pointBackgroundColor: '#38bdf8',
+              pointRadius: 3,
+              tension: 0.3,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#020617',
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: 10,
+              titleColor: '#ffffff',
+              bodyFont: { family: 'JetBrains Mono', size: 12 },
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.dataset.label}: ${context.raw}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#1e293b' },
+              ticks: { color: '#64748b', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            y: {
+              min: 0,
+              max: 100,
+              grid: { color: '#1e293b' },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 11 },
+                callback: function(val) { return val + '%'; }
+              }
+            }
+          }
+        }
+      });
     }
 
-    function setLogDifficulty(diff) {
-      currentDifficulty = diff;
-      const bFacil = document.getElementById('btn-diff-facil');
-      const bMedio = document.getElementById('btn-diff-medio');
-      const bDificil = document.getElementById('btn-diff-dificil');
+    function setChartMetric(metric) {
+      document.getElementById('cm-both').className = metric === 'both' ? 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold' : 'px-2.5 py-1 rounded font-medium text-slate-400';
+      document.getElementById('cm-liquid').className = metric === 'liquid' ? 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold' : 'px-2.5 py-1 rounded font-medium text-slate-400';
 
-      bFacil.className = diff === 'FACIL'
-        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
-        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
-
-      bMedio.className = diff === 'MEDIO'
-        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
-        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
-
-      bDificil.className = diff === 'DIFICIL'
-        ? 'py-2 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300'
-        : 'py-2 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+      evolutionChartInstance.data.datasets[1].hidden = (metric === 'liquid');
+      evolutionChartInstance.update();
     }
 
-    // Load Subjects
+    function setChartPeriod(period) {
+      document.getElementById('cp-8w').className = period === '8w' ? 'px-2 py-1 rounded font-medium bg-slate-800 text-white font-bold' : 'px-2 py-1 rounded font-medium text-slate-500';
+      document.getElementById('cp-4w').className = period === '4w' ? 'px-2 py-1 rounded font-medium bg-slate-800 text-white font-bold' : 'px-2 py-1 rounded font-medium text-slate-500';
+
+      const sliceCount = period === '4w' ? 4 : 8;
+      const sliced = historicalWeeks.slice(-sliceCount);
+      evolutionChartInstance.data.labels = sliced.map(w => w.week);
+      evolutionChartInstance.data.datasets[0].data = sliced.map(w => w.liquidPct);
+      evolutionChartInstance.data.datasets[1].data = sliced.map(w => w.grossPct);
+      evolutionChartInstance.update();
+    }
+
+    // Timer Controls
+    function setTimerMode(mins) {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      document.getElementById('timer-btn').innerHTML = `<svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+      document.getElementById('timer-btn').className = 'p-2 rounded-lg font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors cursor-pointer';
+
+      ['25', '50', 'stop'].forEach(m => document.getElementById(`tm-${m}`).className = 'px-2.5 py-1 rounded text-slate-400 transition-colors');
+
+      if (mins === 25) {
+        document.getElementById('tm-25').className = 'px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold transition-colors';
+        isStopwatch = false;
+        timerDuration = 25 * 60;
+        timerRemaining = timerDuration;
+      } else if (mins === 50) {
+        document.getElementById('tm-50').className = 'px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold transition-colors';
+        isStopwatch = false;
+        timerDuration = 50 * 60;
+        timerRemaining = timerDuration;
+      } else {
+        document.getElementById('tm-stop').className = 'px-2.5 py-1 rounded bg-amber-400 text-slate-950 font-bold transition-colors';
+        isStopwatch = true;
+        stopwatchSeconds = 0;
+      }
+      renderClock();
+    }
+
+    function toggleTimer() {
+      isTimerRunning = !isTimerRunning;
+      const btn = document.getElementById('timer-btn');
+      if (isTimerRunning) {
+        btn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+        btn.className = 'p-2 rounded-lg font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors cursor-pointer';
+
+        timerInterval = setInterval(() => {
+          if (isStopwatch) {
+            stopwatchSeconds++;
+          } else {
+            if (timerRemaining > 0) timerRemaining--;
+            else clearInterval(timerInterval);
+          }
+          renderClock();
+        }, 1000);
+      } else {
+        clearInterval(timerInterval);
+        btn.innerHTML = `<svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+        btn.className = 'p-2 rounded-lg font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors cursor-pointer';
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      document.getElementById('timer-btn').innerHTML = `<svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+      document.getElementById('timer-btn').className = 'p-2 rounded-lg font-bold text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors cursor-pointer';
+      stopwatchSeconds = 0;
+      timerRemaining = timerDuration;
+      renderClock();
+    }
+
+    function renderClock() {
+      const sec = isStopwatch ? stopwatchSeconds : timerRemaining;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      document.getElementById('timer-clock').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateTimerSubject() {
+      const sel = document.getElementById('timer-subject-select');
+      document.getElementById('timer-subject-display').innerText = sel.options[sel.selectedIndex].text.split(' (')[0];
+    }
+
+    // Modal Operations
+    function openModal() {
+      document.getElementById('modal-log').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-log').classList.add('hidden');
+    }
+
+    function setModalMode(mode) {
+      currentModalMode = mode;
+      const singleSec = document.getElementById('modal-single-section');
+      const batchSec = document.getElementById('modal-batch-section');
+      const mmSingle = document.getElementById('mm-single');
+      const mmBatch = document.getElementById('mm-batch');
+
+      if (mode === 'single') {
+        singleSec.classList.remove('hidden');
+        batchSec.classList.add('hidden');
+        mmSingle.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors bg-amber-400 text-slate-950';
+        mmBatch.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors text-slate-400 hover:text-white';
+      } else {
+        singleSec.classList.add('hidden');
+        batchSec.classList.remove('hidden');
+        mmBatch.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors bg-amber-400 text-slate-950';
+        mmSingle.className = 'flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors text-slate-400 hover:text-white';
+      }
+    }
+
+    function setModalResult(res) {
+      modalResult = res;
+      document.getElementById('m-btn-certo').className = res === 'CERTO' ? 'py-2 text-xs font-bold rounded-lg border border-emerald-500 bg-emerald-950/80 text-emerald-300' : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+      document.getElementById('m-btn-errado').className = res === 'ERRADO' ? 'py-2 text-xs font-bold rounded-lg border border-rose-500 bg-rose-950/80 text-rose-300' : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+      document.getElementById('m-btn-branco').className = res === 'BRANCO' ? 'py-2 text-xs font-bold rounded-lg border border-slate-500 bg-slate-800 text-slate-200' : 'py-2 text-xs font-bold rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+    }
+
+    function setModalDiff(diff) {
+      modalDiff = diff;
+      document.getElementById('m-diff-facil').className = diff === 'FACIL' ? 'py-1.5 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300' : 'py-1.5 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+      document.getElementById('m-diff-medio').className = diff === 'MEDIO' ? 'py-1.5 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300' : 'py-1.5 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+      document.getElementById('m-diff-dificil').className = diff === 'DIFICIL' ? 'py-1.5 text-xs font-medium rounded-lg border border-amber-500 bg-amber-500/20 text-amber-300' : 'py-1.5 text-xs font-medium rounded-lg border border-slate-800 bg-slate-950 text-slate-400';
+    }
+
+    function updateBatchNet() {
+      const c = parseInt(document.getElementById('m-batch-c').value) || 0;
+      const e = parseInt(document.getElementById('m-batch-e').value) || 0;
+      const net = c - e;
+      document.getElementById('batch-net-preview').innerText = `${net > 0 ? '+' : ''}${net} pts`;
+    }
+
+    // Submit Modal Log (Individual or Batch)
+    async function submitModalLog(event) {
+      event.preventDefault();
+      const subjectId = parseInt(document.getElementById('modal-subject-select').value, 10);
+      if (!subjectId) {
+        alert('Selecione uma disciplina.');
+        return;
+      }
+
+      const token = localStorage.getItem('access_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        if (currentModalMode === 'single') {
+          const notes = document.getElementById('modal-notes').value.trim();
+          await fetch('/study/log', {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({
+              subject_id: subjectId,
+              result: modalResult,
+              difficulty: modalDiff,
+              notes: notes || null,
+              time_spent_seconds: 60
+            })
+          });
+        } else {
+          const c = parseInt(document.getElementById('m-batch-c').value) || 0;
+          const e = parseInt(document.getElementById('m-batch-e').value) || 0;
+          const b = parseInt(document.getElementById('m-batch-b').value) || 0;
+          const notes = document.getElementById('modal-batch-notes').value.trim();
+
+          await fetch('/study/log-batch', {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({
+              subject_id: subjectId,
+              certo: c,
+              errado: e,
+              branco: b,
+              notes: notes || null
+            })
+          });
+        }
+
+        closeModal();
+        await loadMetrics();
+        await loadCadernoErros(false);
+
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao registrar resolução.');
+      }
+    }
+
+    // Load Subjects & Populate Selects
     async function loadSubjects() {
       try {
         const token = localStorage.getItem('access_token');
@@ -395,21 +1169,21 @@
           return;
         }
 
-        const subjects = await res.json();
-        subjectsCache = subjects;
+        const data = await res.json();
+        subjects = data;
         subjects.forEach(s => { subjectsMap[s.id] = s; });
 
-        const select = document.getElementById('log-subject');
-        select.innerHTML = '<option value="">Selecione a Disciplina...</option>';
+        // Populate Modal Select
+        const modalSelect = document.getElementById('modal-subject-select');
+        modalSelect.innerHTML = '<option value="">Selecione a Disciplina...</option>';
 
-        // Group by block
         const b2 = subjects.filter(s => s.block.includes('Bloco II'));
         const b1 = subjects.filter(s => s.block.includes('Bloco I'));
         const b3 = subjects.filter(s => s.block.includes('Bloco III'));
 
-        if (b2.length > 0) {
+        if (b2.length) {
           const g2 = document.createElement('optgroup');
-          g2.label = 'Bloco II - Legislação de Trânsito (Prioridade Máxima)';
+          g2.label = 'Bloco II - Legislação de Trânsito (Vital - Peso 10)';
           b2.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
@@ -417,10 +1191,10 @@
             if (s.name.includes('Trânsito')) opt.selected = true;
             g2.appendChild(opt);
           });
-          select.appendChild(g2);
+          modalSelect.appendChild(g2);
         }
 
-        if (b1.length > 0) {
+        if (b1.length) {
           const g1 = document.createElement('optgroup');
           g1.label = 'Bloco I - Conhecimentos Gerais';
           b1.forEach(s => {
@@ -429,10 +1203,10 @@
             opt.innerText = `${s.name} (Peso ${s.weight})`;
             g1.appendChild(opt);
           });
-          select.appendChild(g1);
+          modalSelect.appendChild(g1);
         }
 
-        if (b3.length > 0) {
+        if (b3.length) {
           const g3 = document.createElement('optgroup');
           g3.label = 'Bloco III - Conhecimentos Específicos';
           b3.forEach(s => {
@@ -441,11 +1215,11 @@
             opt.innerText = `${s.name} (Peso ${s.weight})`;
             g3.appendChild(opt);
           });
-          select.appendChild(g3);
+          modalSelect.appendChild(g3);
         }
 
-      } catch (err) {
-        console.error('Erro ao carregar matérias:', err);
+      } catch (e) {
+        console.error('Erro ao carregar matérias:', e);
       }
     }
 
@@ -468,10 +1242,9 @@
 
         const data = await res.json();
 
-        // Update Top KPIs
+        // Top KPIs
         const liquidElem = document.getElementById('metric-liquid');
         liquidElem.innerText = data.liquid_total > 0 ? `+${data.liquid_total}` : data.liquid_total;
-        
         document.getElementById('metric-certo').innerText = data.certo;
         document.getElementById('metric-errado').innerText = data.errado;
         document.getElementById('metric-branco').innerText = data.branco;
@@ -480,13 +1253,13 @@
         document.getElementById('metric-accuracy').innerText = `(bruto: ${data.accuracy}%)`;
         document.getElementById('metric-penalties').innerText = `${data.errado} erros anularam ${data.errado} acertos`;
 
-        // Cutoff badge
+        // Cutoff Badge
         const statusBadge = document.getElementById('metric-status-badge');
         const cutoffStatus = document.getElementById('metric-cutoff-status');
 
         if (data.general_passed) {
-          statusBadge.innerHTML = `<span class="text-emerald-400 font-bold">Habilitado (≥ 48 pts)</span>`;
-          cutoffStatus.innerHTML = `<span class="text-emerald-400 font-semibold">Corte geral atingido!</span>`;
+          statusBadge.innerHTML = `<span class="text-emerald-400 font-bold">Habilitado</span>`;
+          cutoffStatus.innerHTML = `<span class="text-emerald-400 font-semibold">Corte geral atingido (≥ 48 pts)</span>`;
         } else if (data.eliminated_by_minima) {
           statusBadge.innerHTML = `<span class="text-rose-400 font-bold">Risco de Bloco (&lt; 10)</span>`;
           cutoffStatus.innerHTML = `<span class="text-rose-400 font-semibold">Mínimo pendente em algum bloco</span>`;
@@ -496,42 +1269,47 @@
         }
 
         // Render Blocks
-        renderBlocks(data.blocks);
+        renderBlocks(data.blocks, data.subjects);
 
-      } catch (err) {
-        console.error('Erro ao buscar métricas:', err);
+        // Render Matrix Table
+        renderSubjectsTable(data.subjects || []);
+
+      } catch (e) {
+        console.error('Erro ao buscar métricas:', e);
       }
     }
 
-    // Render Blocks
-    function renderBlocks(blocks) {
+    function renderBlocks(blocks, subjectsList) {
       const container = document.getElementById('blocks-container');
       if (!blocks) return;
 
-      const blockDefs = [
+      const defs = [
         {
           key: 'Bloco I - Conhecimentos Gerais',
           title: 'Bloco I: Gerais',
-          subtitle: 'Português, RLM, Informática, Física, etc.',
+          subtitle: '55 itens esperados · Peso intermediário',
           isHighlight: false
         },
         {
           key: 'Bloco II - Legislação de Trânsito',
           title: 'Bloco II: Legislação de Trânsito (CTB)',
-          subtitle: '30 itens esperados · Peso 10 (Vital)',
+          subtitle: '30 itens esperados · Peso 10 (Vital para Aprovação)',
           isHighlight: true
         },
         {
           key: 'Bloco III - Conhecimentos Específicos',
           title: 'Bloco III: Direito',
-          subtitle: 'Penal, Processual, Constitucional, Adm.',
+          subtitle: '35 itens esperados · Penal, Processual, Constitucional, Adm.',
           isHighlight: false
         }
       ];
 
-      container.innerHTML = blockDefs.map(def => {
-        const bData = blocks[def.key] || { certo: 0, errado: 0, branco: 0, liquid: 0, passed: false, efficiency: 0 };
-        const progressPct = Math.min(100, Math.max(0, (bData.liquid / 10) * 100));
+      container.innerHTML = defs.map(def => {
+        const b = blocks[def.key] || { certo: 0, errado: 0, branco: 0, liquid: 0, passed: false, efficiency: 0 };
+        const progressPct = Math.min(100, Math.max(0, (b.liquid / 10) * 100));
+        
+        // Find subjects in this block
+        const bSubjs = (subjectsList || []).filter(s => s.block === def.key);
 
         return `
           <div class="rounded-xl p-5 flex flex-col justify-between ${
@@ -545,7 +1323,7 @@
                   <h3 class="text-sm font-bold text-white tracking-tight">${def.title}</h3>
                   <p class="text-[11px] text-slate-400 mt-0.5">${def.subtitle}</p>
                 </div>
-                ${bData.passed 
+                ${b.passed 
                   ? '<span class="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">Apto (≥10)</span>'
                   : '<span class="text-[10px] font-bold text-rose-400 bg-rose-950/60 border border-rose-800 px-2 py-0.5 rounded">Mínimo Pendente</span>'
                 }
@@ -553,23 +1331,35 @@
 
               <div class="flex items-baseline justify-between py-2 border-y border-slate-800/80 mb-3">
                 <div>
-                  <span class="text-2xl font-bold font-mono tabular-nums text-white">${bData.liquid > 0 ? '+' + bData.liquid : bData.liquid}</span>
+                  <span class="text-2xl font-bold font-mono tabular-nums text-white">${b.liquid > 0 ? '+' + b.liquid : b.liquid}</span>
                   <span class="text-xs text-slate-400 ml-1">pts líquidos</span>
                 </div>
                 <div class="text-right text-xs font-mono text-slate-400">
-                  <span class="text-emerald-400 font-semibold">${bData.certo}C</span> /
-                  <span class="text-rose-400 font-semibold">${bData.errado}E</span> /
-                  <span class="text-slate-500">${bData.branco}B</span>
+                  <span class="text-emerald-400 font-semibold">${b.certo}C</span> /
+                  <span class="text-rose-400 font-semibold">${b.errado}E</span> /
+                  <span class="text-slate-500">${b.branco}B</span>
                 </div>
               </div>
 
-              <div class="space-y-1.5">
+              <div class="space-y-1.5 mb-4">
                 <div class="flex justify-between text-[11px] text-slate-400 font-medium">
                   <span>Corte do Edital</span>
-                  <span class="font-mono">${bData.liquid} / 10 pts</span>
+                  <span class="font-mono">${b.liquid} / 10 pts</span>
                 </div>
                 <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
-                  <div class="h-full rounded-full transition-all duration-500 ${bData.passed ? 'bg-emerald-500' : 'bg-amber-500'}" style="width: ${progressPct}%"></div>
+                  <div class="h-full rounded-full transition-all duration-500 ${b.passed ? 'bg-emerald-500' : 'bg-amber-500'}" style="width: ${progressPct}%"></div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Disciplinas</span>
+                <div class="space-y-1 max-h-32 overflow-y-auto pr-1">
+                  ${bSubjs.map(s => `
+                    <div class="flex items-center justify-between text-xs py-1 px-1.5 rounded hover:bg-slate-800/50">
+                      <span class="text-slate-300 truncate max-w-[160px]">${s.name}</span>
+                      <span class="font-mono text-[11px] ${s.liquid > 0 ? 'text-emerald-400' : (s.liquid < 0 ? 'text-rose-400' : 'text-slate-500')}">${s.liquid > 0 ? '+' + s.liquid : s.liquid}</span>
+                    </div>
+                  `).join('')}
                 </div>
               </div>
             </div>
@@ -578,87 +1368,72 @@
       }).join('');
     }
 
-    // Handle Quick Log
-    async function handleLogQuestion(event) {
-      event.preventDefault();
-
-      const subjectId = document.getElementById('log-subject').value;
-      const notes = document.getElementById('log-notes').value.trim();
-      const submitBtn = document.getElementById('log-submit-btn');
-      const feedback = document.getElementById('form-feedback');
-
-      if (!subjectId) {
-        alert('Por favor, selecione uma disciplina da PRF.');
-        return;
-      }
-
-      submitBtn.disabled = true;
-
-      const payload = {
-        subject_id: parseInt(subjectId, 10),
-        result: currentResult,
-        difficulty: currentDifficulty,
-        notes: notes || null,
-        time_spent_seconds: 60
-      };
-
-      try {
-        const token = localStorage.getItem('access_token');
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
-        const res = await fetch('/study/log', {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify(payload)
-        });
-
-        if (res.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error('Falha ao registrar questão');
-        }
-
-        // Reset input notes
-        document.getElementById('log-notes').value = '';
-
-        // Show feedback
-        feedback.className = 'text-xs font-semibold text-emerald-400 block';
-        feedback.innerText = 'Item registrado com sucesso!';
-        setTimeout(() => { feedback.classList.add('hidden'); }, 3000);
-
-        // Immediate Refresh of Metrics and Caderno de Erros without full page reload
-        await loadMetrics();
-        await loadCadernoErros(false);
-
-      } catch (err) {
-        console.error('Erro ao registrar:', err);
-        feedback.className = 'text-xs font-semibold text-rose-400 block';
-        feedback.innerText = 'Erro ao salvar resolução.';
-        setTimeout(() => { feedback.classList.add('hidden'); }, 3000);
-      } finally {
-        submitBtn.disabled = false;
-      }
+    let globalSubjectsData = [];
+    function renderSubjectsTable(data) {
+      globalSubjectsData = data;
+      filterTable('all');
     }
 
-    // Load Caderno de Erros
+    function filterTable(filter) {
+      ['all', 'b2', 'b1', 'b3'].forEach(f => {
+        const btn = document.getElementById(`ft-${f}`);
+        if (btn) btn.className = 'px-2.5 py-1 rounded font-medium text-slate-400 transition-colors';
+      });
+
+      if (filter === 'all') document.getElementById('ft-all').className = 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold transition-colors';
+      else if (filter === 'Bloco II') document.getElementById('ft-b2').className = 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold transition-colors';
+      else if (filter === 'Bloco I') document.getElementById('ft-b1').className = 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold transition-colors';
+      else if (filter === 'Bloco III') document.getElementById('ft-b3').className = 'px-2.5 py-1 rounded font-medium bg-amber-400 text-slate-950 font-bold transition-colors';
+
+      const filtered = globalSubjectsData.filter(s => {
+        if (filter === 'all') return true;
+        return s.block.includes(filter);
+      });
+
+      const tbody = document.getElementById('subjects-table-body');
+      tbody.innerHTML = filtered.map(s => `
+        <tr class="hover:bg-slate-800/40 transition-colors h-11">
+          <td class="py-2.5 px-4 font-semibold text-white">
+            <div class="flex items-center gap-2">
+              ${s.block.includes('Bloco II') ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Peso 10"></span>' : ''}
+              <span class="truncate max-w-[200px]">${s.name}</span>
+            </div>
+          </td>
+          <td class="py-2.5 px-3 text-slate-400 text-[11px] whitespace-nowrap">${s.block.split(' - ')[0]}</td>
+          <td class="py-2.5 px-3 text-right font-mono tabular-nums text-slate-300 font-bold">${s.weight}x</td>
+          <td class="py-2.5 px-3 text-right font-mono tabular-nums text-slate-400">${s.total}</td>
+          <td class="py-2.5 px-3 text-center font-mono text-[11px] whitespace-nowrap">
+            <span class="text-emerald-400 font-semibold">${s.certo}</span>
+            <span class="text-slate-600 mx-0.5">/</span>
+            <span class="text-rose-400 font-semibold">${s.errado}</span>
+            <span class="text-slate-600 mx-0.5">/</span>
+            <span class="text-slate-500">${s.branco}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono tabular-nums font-bold ${s.liquid > 0 ? 'text-emerald-400' : (s.liquid < 0 ? 'text-rose-400' : 'text-slate-500')}">
+            ${s.liquid > 0 ? '+' + s.liquid : s.liquid}
+          </td>
+          <td class="py-2.5 px-3 text-right font-mono tabular-nums text-slate-300">${s.accuracy}%</td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="quickLaunchSubject(${s.id})" class="p-1 rounded bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-400 transition-colors cursor-pointer" title="Lançar Questão">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function quickLaunchSubject(id) {
+      openModal();
+      document.getElementById('modal-subject-select').value = id;
+    }
+
+    // Caderno de Erros Operations
+    let cadernoCache = [];
     async function loadCadernoErros(reviewedFilter) {
+      document.getElementById('filter-pending-btn').className = !reviewedFilter ? 'px-3 py-1 rounded-md font-medium bg-amber-400 text-slate-950' : 'px-3 py-1 rounded-md font-medium text-slate-400 hover:text-white';
+      document.getElementById('filter-reviewed-btn').className = reviewedFilter ? 'px-3 py-1 rounded-md font-medium bg-amber-400 text-slate-950' : 'px-3 py-1 rounded-md font-medium text-slate-400 hover:text-white';
+
       const tbody = document.getElementById('caderno-table-body');
-      const btnPending = document.getElementById('filter-pending-btn');
-      const btnReviewed = document.getElementById('filter-reviewed-btn');
-
-      if (reviewedFilter) {
-        btnReviewed.className = 'px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors';
-        btnPending.className = 'px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors';
-      } else {
-        btnPending.className = 'px-2.5 py-1 rounded-md font-semibold bg-amber-400 text-slate-950 transition-colors';
-        btnReviewed.className = 'px-2.5 py-1 rounded-md font-medium text-slate-400 hover:text-white transition-colors';
-      }
-
       tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500">Atualizando caderno de erros...</td></tr>`;
 
       try {
@@ -666,8 +1441,7 @@
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const url = `/study/caderno-erros?reviewed=${reviewedFilter}`;
-        const res = await fetch(url, {
+        const res = await fetch(`/study/caderno-erros?reviewed=${reviewedFilter}`, {
           credentials: 'include',
           headers
         });
@@ -677,90 +1451,203 @@
           return;
         }
 
-        const logs = await res.json();
+        const data = await res.json();
+        cadernoCache = data;
+        renderCadernoList(data);
 
-        if (!logs || logs.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" class="py-8 text-center text-slate-400">
-                <div class="font-medium text-xs text-slate-300">Nenhum item encontrado nesta categoria.</div>
-                <div class="text-[11px] text-slate-500 mt-1">Quando você errar uma questão no simulado, ela aparecerá aqui para revisão.</div>
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        tbody.innerHTML = logs.map(item => {
-          const subject = subjectsMap[item.subject_id];
-          const subjectName = subject ? subject.name : `Matéria #${item.subject_id}`;
-          const isTrânsito = subject && subject.block.includes('Bloco II');
-          const formattedDate = new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
-          return `
-            <tr class="hover:bg-slate-800/40 transition-colors h-11">
-              <td class="py-2.5 px-4 font-semibold text-white">
-                <div class="flex items-center gap-1.5">
-                  ${isTrânsito ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Bloco II Trânsito"></span>' : ''}
-                  <span class="truncate max-w-[200px]">${subjectName}</span>
-                </div>
-              </td>
-              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">
-                ${item.difficulty.toLowerCase()}
-              </td>
-              <td class="py-2.5 px-4 text-slate-300 max-w-md truncate" title="${item.notes || 'Sem anotação'}">
-                ${item.notes || '<span class="text-slate-600 italic">Sem anotação cadastrada</span>'}
-              </td>
-              <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                ${formattedDate}
-              </td>
-              <td class="py-2.5 px-4 text-center">
-                <button 
-                  onclick="toggleReview(${item.id})"
-                  class="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
-                    item.reviewed 
-                      ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' 
-                      : 'bg-emerald-950/80 border border-emerald-700 text-emerald-300 hover:bg-emerald-900'
-                  }"
-                >
-                  ${item.reviewed ? 'Revisado' : 'Marcar Revisado'}
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        console.error('Erro ao carregar caderno de erros:', err);
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-rose-400">Erro ao carregar caderno de erros.</td></tr>`;
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    // Toggle Review Status
-    async function toggleReview(logId) {
+    function renderCadernoList(data) {
+      const tbody = document.getElementById('caderno-table-body');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-8 text-center text-slate-400">
+              <div class="font-medium text-xs text-slate-300">Nenhum item encontrado nesta categoria.</div>
+              <div class="text-[11px] text-slate-500 mt-1">Quando você registrar questões erradas, elas aparecerão aqui para revisão ativa.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        const s = subjectsMap[item.subject_id];
+        const sName = s ? s.name : `Disciplina #${item.subject_id}`;
+        const isTrânsito = s && s.block.includes('Bloco II');
+        const d = new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors h-11">
+            <td class="py-2.5 px-4 font-semibold text-white">
+              <div class="flex items-center gap-1.5">
+                ${isTrânsito ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>' : ''}
+                <span class="truncate max-w-[200px]">${sName}</span>
+              </div>
+            </td>
+            <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">${item.difficulty.toLowerCase()}</td>
+            <td class="py-2.5 px-4 text-slate-300 max-w-md truncate" title="${item.notes || 'Sem anotação'}">
+              ${item.notes || '<span class="text-slate-600 italic">Sem anotação cadastrada</span>'}
+            </td>
+            <td class="py-2.5 px-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">${d}</td>
+            <td class="py-2.5 px-4 text-center">
+              <button onclick="toggleReview(${item.id})" class="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                item.reviewed 
+                  ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' 
+                  : 'bg-emerald-950/80 border border-emerald-700 text-emerald-300 hover:bg-emerald-900'
+              }">
+                ${item.reviewed ? 'Revisado' : 'Marcar Revisado'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterCadernoSearch() {
+      const q = document.getElementById('caderno-search').value.toLowerCase();
+      const filtered = cadernoCache.filter(item => {
+        const s = subjectsMap[item.subject_id];
+        const sName = s ? s.name.toLowerCase() : '';
+        const notes = (item.notes || '').toLowerCase();
+        return sName.includes(q) || notes.includes(q);
+      });
+      renderCadernoList(filtered);
+    }
+
+    async function toggleReview(id) {
       try {
         const token = localStorage.getItem('access_token');
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const res = await fetch(`/study/log/${logId}/review`, {
+        await fetch(`/study/log/${id}/review`, {
           method: 'PATCH',
           headers,
           credentials: 'include'
         });
 
-        if (res.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
-
-        // Refresh caderno
-        const isCurrentReviewed = document.getElementById('filter-reviewed-btn').classList.contains('bg-amber-400');
-        await loadCadernoErros(isCurrentReviewed);
-
-      } catch (err) {
-        console.error('Erro ao atualizar revisão:', err);
+        const isReviewed = document.getElementById('filter-reviewed-btn').classList.contains('bg-amber-400');
+        loadCadernoErros(isReviewed);
+      } catch (e) {
+        console.error(e);
       }
+    }
+
+    // Simulator Logic
+    function recalcSimulator() {
+      const b1c = parseInt(document.getElementById('sim-b1-c').value) || 0;
+      const b1e = parseInt(document.getElementById('sim-b1-e').value) || 0;
+      const b1b = parseInt(document.getElementById('sim-b1-b').value) || 0;
+
+      const b2c = parseInt(document.getElementById('sim-b2-c').value) || 0;
+      const b2e = parseInt(document.getElementById('sim-b2-e').value) || 0;
+      const b2b = parseInt(document.getElementById('sim-b2-b').value) || 0;
+
+      const b3c = parseInt(document.getElementById('sim-b3-c').value) || 0;
+      const b3e = parseInt(document.getElementById('sim-b3-e').value) || 0;
+      const b3b = parseInt(document.getElementById('sim-b3-b').value) || 0;
+
+      const b1l = b1c - b1e;
+      const b2l = b2c - b2e;
+      const b3l = b3c - b3e;
+
+      document.getElementById('sim-b1-liquid').innerText = `${b1l > 0 ? '+' : ''}${b1l} pts`;
+      document.getElementById('sim-b2-liquid').innerText = `${b2l > 0 ? '+' : ''}${b2l} pts`;
+      document.getElementById('sim-b3-liquid').innerText = `${b3l > 0 ? '+' : ''}${b3l} pts`;
+
+      const totalC = b1c + b2c + b3c;
+      const totalE = b1e + b2e + b3e;
+      const totalB = b1b + b2b + b3b;
+      const totalLiquid = totalC - totalE;
+
+      document.getElementById('sim-certo-sum').innerText = totalC;
+      document.getElementById('sim-errado-sum').innerText = totalE;
+      document.getElementById('sim-branco-sum').innerText = totalB;
+      document.getElementById('sim-liquid-total').innerText = `${totalLiquid > 0 ? '+' : ''}${totalLiquid}`;
+
+      const b1Pass = b1l >= 10;
+      const b2Pass = b2l >= 10;
+      const b3Pass = b3l >= 10;
+      const genPass = totalLiquid >= 48 && b1Pass && b2Pass && b3Pass;
+
+      const box = document.getElementById('sim-status-box');
+      if (genPass) {
+        box.innerHTML = `<div class="px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-700 text-emerald-300 text-xs font-bold">Aprovado na Prova Objetiva (≥ 48 pts)</div>`;
+      } else {
+        box.innerHTML = `<div class="px-4 py-2.5 rounded-lg bg-rose-950/60 border border-rose-700 text-rose-300 text-xs font-bold">Eliminado (${totalLiquid}/48 pts ou bloco &lt; 10)</div>`;
+      }
+    }
+
+    function updateBlankSlider() {
+      const val = parseInt(document.getElementById('blank-slider').value) || 0;
+      document.getElementById('slider-val').innerText = val;
+      document.getElementById('slider-bonus').innerText = `+${val} pts líquidos`;
+    }
+
+    // AI Coaching & Drills
+    async function requestAiDiagnostic() {
+      const btn = document.getElementById('btn-run-ai');
+      btn.disabled = true;
+      btn.innerText = 'Auditando com IA...';
+
+      try {
+        const token = localStorage.getItem('access_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/study/ai-diagnostic', {
+          method: 'POST',
+          headers,
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+        if (data.diagnostico_geral) {
+          document.getElementById('ai-diag-text').innerText = data.diagnostico_geral;
+        }
+        if (data.analise_bloco_2_transito) {
+          document.getElementById('ai-b2-text').innerText = data.analise_bloco_2_transito;
+        }
+        if (data.estrategia_chute_e_branco) {
+          document.getElementById('ai-blank-text').innerText = data.estrategia_chute_e_branco;
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Auditar Estudos com IA';
+      }
+    }
+
+    function answerDrill(id, choice, isCorrectChoice, explanation) {
+      const fb = document.getElementById(`drill-feedback-${id}`);
+      const ansDiv = document.getElementById(`drill-ans-${id}`);
+      ansDiv.classList.add('hidden');
+
+      const isRight = (choice === 'CERTO' && isCorrectChoice) || (choice === 'ERRADO' && !isCorrectChoice);
+      fb.className = isRight 
+        ? 'text-xs p-3 rounded-lg bg-emerald-950/60 border border-emerald-700 text-emerald-200 space-y-1 block'
+        : 'text-xs p-3 rounded-lg bg-rose-950/60 border border-rose-700 text-rose-200 space-y-1 block';
+
+      fb.innerHTML = `
+        <div class="font-bold flex items-center gap-1.5">
+          ${isRight ? '<span>Você ACERTOU! (+1 ponto líquido Cebraspe)</span>' : '<span>Você ERROU! (-1 ponto anulado pelo Cebraspe)</span>'}
+        </div>
+        <p class="text-[11px] text-slate-300 mt-1">${explanation}</p>
+      `;
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      } catch (e) {}
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_name');
+      window.location.href = '/login';
     }
   </script>
 </body>
