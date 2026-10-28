@@ -1,0 +1,211 @@
+import { Subject, QuestionLog, UserProfile } from '../types/prf';
+
+export const INITIAL_USER: UserProfile = {
+  id: 'usr_douglas_01',
+  name: 'Douglas Lima',
+  email: 'dogao10lima@gmail.com',
+  targetExam: 'Polícia Rodoviária Federal (PRF)',
+  targetYear: 2027,
+  dailyGoalQuestions: 50,
+};
+
+export const PRF_SUBJECTS: Subject[] = [
+  // Bloco I - Conhecimentos Gerais (55 itens esperados)
+  { id: 1, name: 'Língua Portuguesa', block: 'Bloco I - Conhecimentos Gerais', weight: 5, expectedQuestions: 20 },
+  { id: 2, name: 'Raciocínio Lógico-Matemático', block: 'Bloco I - Conhecimentos Gerais', weight: 3, expectedQuestions: 8 },
+  { id: 3, name: 'Informática', block: 'Bloco I - Conhecimentos Gerais', weight: 3, expectedQuestions: 6 },
+  { id: 4, name: 'Noções de Física', block: 'Bloco I - Conhecimentos Gerais', weight: 2, expectedQuestions: 5 },
+  { id: 5, name: 'Ética e Cidadania', block: 'Bloco I - Conhecimentos Gerais', weight: 1, expectedQuestions: 4 },
+  { id: 6, name: 'Geopolítica Brasileira', block: 'Bloco I - Conhecimentos Gerais', weight: 1, expectedQuestions: 4 },
+  { id: 7, name: 'Língua Estrangeira (Inglês/Espanhol)', block: 'Bloco I - Conhecimentos Gerais', weight: 2, expectedQuestions: 8 },
+
+  // Bloco II - Legislação de Trânsito (30 itens esperados - 25% da prova objetiva)
+  { id: 8, name: 'Legislação de Trânsito (CTB e Resoluções)', block: 'Bloco II - Legislação de Trânsito', weight: 10, expectedQuestions: 30 },
+
+  // Bloco III - Conhecimentos Específicos (35 itens esperados)
+  { id: 9, name: 'Direito Administrativo', block: 'Bloco III - Conhecimentos Específicos', weight: 4, expectedQuestions: 7 },
+  { id: 10, name: 'Direito Constitucional', block: 'Bloco III - Conhecimentos Específicos', weight: 4, expectedQuestions: 7 },
+  { id: 11, name: 'Direito Penal', block: 'Bloco III - Conhecimentos Específicos', weight: 3, expectedQuestions: 6 },
+  { id: 12, name: 'Direito Processual Penal', block: 'Bloco III - Conhecimentos Específicos', weight: 3, expectedQuestions: 6 },
+  { id: 13, name: 'Legislação Especial', block: 'Bloco III - Conhecimentos Específicos', weight: 3, expectedQuestions: 5 },
+  { id: 14, name: 'Direitos Humanos', block: 'Bloco III - Conhecimentos Específicos', weight: 2, expectedQuestions: 4 },
+];
+
+export const INITIAL_QUESTION_LOGS: QuestionLog[] = [
+  // Trânsito (CTB)
+  {
+    id: 'log_01',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Art. 29 CTB: Veículos de socorro de incêndio e salvamento gozam de livre circulação, estacionamento e parada quando em serviço de urgência e devidamente identificados.',
+    reviewed: true,
+    timeSpentSeconds: 65,
+    createdAt: '2026-10-27T10:15:00Z',
+  },
+  {
+    id: 'log_02',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'ERRADO',
+    difficulty: 'DIFICIL',
+    notes: 'PEGADINHA CEBRASPE: Art. 306 do CTB (embriaguez ao volante) é crime de perigo abstrato, não exige dano potencial concreto nem condução perigosa comprovada se houver a concentração alcoólica mínima legal.',
+    reviewed: false,
+    timeSpentSeconds: 95,
+    createdAt: '2026-10-27T10:20:00Z',
+  },
+  {
+    id: 'log_03',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'CERTO',
+    difficulty: 'FACIL',
+    notes: 'Resolução CONTRAN sobre cinto de segurança e transporte de crianças (cadeirinha até 10 anos ou 1,45m).',
+    reviewed: true,
+    timeSpentSeconds: 45,
+    createdAt: '2026-10-27T10:32:00Z',
+  },
+  {
+    id: 'log_04',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Competência da PRF: fiscalizar e lavrar auto de infração em rodovias federais delegadas (Art. 20 CTB).',
+    reviewed: true,
+    timeSpentSeconds: 50,
+    createdAt: '2026-10-27T11:05:00Z',
+  },
+  {
+    id: 'log_05',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'BRANCO',
+    difficulty: 'DIFICIL',
+    notes: 'Dúvida na Resolução 965 do CONTRAN sobre estacionamento regulamentado. Decisão estratégica de deixar em branco para não anular ponto certo.',
+    reviewed: false,
+    timeSpentSeconds: 70,
+    createdAt: '2026-10-27T11:15:00Z',
+  },
+  {
+    id: 'log_06',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Art. 65 CTB - obrigatoriedade do uso do cinto de segurança em todas as vias do território nacional.',
+    reviewed: true,
+    timeSpentSeconds: 40,
+    createdAt: '2026-10-27T11:30:00Z',
+  },
+  {
+    id: 'log_07',
+    userId: 'usr_douglas_01',
+    subjectId: 8,
+    result: 'CERTO',
+    difficulty: 'FACIL',
+    notes: 'Velocidade máxima onde não houver sinalização: 110 km/h para automóveis em pista dupla.',
+    reviewed: true,
+    timeSpentSeconds: 30,
+    createdAt: '2026-10-27T11:45:00Z',
+  },
+
+  // Português
+  {
+    id: 'log_08',
+    userId: 'usr_douglas_01',
+    subjectId: 1,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Crase facultativa antes de pronome possessivo feminino singular ("a sua disposição").',
+    reviewed: true,
+    timeSpentSeconds: 60,
+    createdAt: '2026-10-27T14:10:00Z',
+  },
+  {
+    id: 'log_09',
+    userId: 'usr_douglas_01',
+    subjectId: 1,
+    result: 'ERRADO',
+    difficulty: 'DIFICIL',
+    notes: 'CUIDADO: Cebraspe mudou o sentido do texto ao substituir "porquanto" (explicativa/causal) por "conquanto" (concessiva). São conectivos opostos!',
+    reviewed: false,
+    timeSpentSeconds: 110,
+    createdAt: '2026-10-27T14:25:00Z',
+  },
+  {
+    id: 'log_10',
+    userId: 'usr_douglas_01',
+    subjectId: 1,
+    result: 'CERTO',
+    difficulty: 'FACIL',
+    notes: 'Concordância verbal com voz passiva sintética: "Alugam-se casas" (casas é sujeito paciente).',
+    reviewed: true,
+    timeSpentSeconds: 35,
+    createdAt: '2026-10-27T14:40:00Z',
+  },
+
+  // Direito Penal & Processual
+  {
+    id: 'log_11',
+    userId: 'usr_douglas_01',
+    subjectId: 11,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Princípio da insignificância não se aplica a crimes com violência ou grave ameaça à pessoa (Súmula 599 STJ e pacífica Cebraspe).',
+    reviewed: true,
+    timeSpentSeconds: 55,
+    createdAt: '2026-10-27T16:00:00Z',
+  },
+  {
+    id: 'log_12',
+    userId: 'usr_douglas_01',
+    subjectId: 12,
+    result: 'ERRADO',
+    difficulty: 'DIFICIL',
+    notes: 'FLAGRANTE PREPARADO: Súmula 145 do STF diz que não há crime quando a preparação do flagrante pela polícia torna impossível a sua consumação (crime impossível). Não confundir com flagrante esperado!',
+    reviewed: false,
+    timeSpentSeconds: 85,
+    createdAt: '2026-10-27T16:30:00Z',
+  },
+
+  // Direito Constitucional
+  {
+    id: 'log_13',
+    userId: 'usr_douglas_01',
+    subjectId: 10,
+    result: 'CERTO',
+    difficulty: 'FACIL',
+    notes: 'Art. 144, § 2º CF/88: A polícia rodoviária federal, órgão permanente, estruturado em carreira, destina-se, na forma da lei, ao patrulhamento ostensivo das rodovias federais.',
+    reviewed: true,
+    timeSpentSeconds: 40,
+    createdAt: '2026-10-27T17:15:00Z',
+  },
+
+  // Física
+  {
+    id: 'log_14',
+    userId: 'usr_douglas_01',
+    subjectId: 4,
+    result: 'ERRADO',
+    difficulty: 'DIFICIL',
+    notes: 'Cinemática / Frenagem de veículo: a distância de frenagem é proporcional ao quadrado da velocidade inicial (v² = v0² - 2aΔs). Se dobrar a velocidade, a distância quadruplica!',
+    reviewed: false,
+    timeSpentSeconds: 120,
+    createdAt: '2026-10-27T18:00:00Z',
+  },
+
+  // RLM
+  {
+    id: 'log_15',
+    userId: 'usr_douglas_01',
+    subjectId: 2,
+    result: 'CERTO',
+    difficulty: 'MEDIO',
+    notes: 'Negação de proposição condicional (P -> Q): "Manter a primeira E negar a segunda" (P ^ ~Q). Regra do MANÉ.',
+    reviewed: true,
+    timeSpentSeconds: 75,
+    createdAt: '2026-10-27T18:30:00Z',
+  },
+];
