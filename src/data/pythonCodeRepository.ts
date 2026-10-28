@@ -474,6 +474,116 @@ if __name__ == "__main__":
 `,
   },
   {
+    path: 'app/main.py',
+    filename: 'main.py',
+    language: 'python',
+    step: 'Passo 3 - Aplicação FastAPI',
+    description: 'Ponto de entrada do FastAPI, CORS, middlewares e inicialização das tabelas',
+    code: `from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
+
+from app.config import settings
+from app.database import engine, Base
+from app.routes.auth_routes import router as auth_router
+from app.routes.study_routes import router as study_router
+
+# Inicialização automática de tabelas (SQLite local ou PostgreSQL)
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    description="Backend oficial da plataforma de estudos e métricas Cebraspe da PRF",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router)
+app.include_router(study_router)
+
+if os.path.exists("app/static"):
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+@app.get("/")
+def read_root():
+    return {
+        "app": settings.APP_NAME,
+        "status": "online",
+        "docs_url": "/docs",
+        "engine": "Cebraspe 120 Itens PRF",
+        "database": "PostgreSQL / SQLite Híbrido"
+    }
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+`,
+  },
+  {
+    path: 'app/routes/study_routes.py',
+    filename: 'study_routes.py',
+    language: 'python',
+    step: 'Passo 3 - Aplicação FastAPI',
+    description: 'Rotas de métricas Cebraspe, lançamento de questões, caderno de erros e IA',
+    code: `from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from datetime import datetime
+from app.database import get_db
+from app.models import User, Subject, QuestionLog, QuestionResult, QuestionDifficulty
+from app.schemas import QuestionLogCreate, BatchQuestionLogCreate, QuestionLogResponse, SubjectSchema
+from app.security import get_current_user
+from app.services.prf_engine import calculate_cebraspe_metrics
+from app.services.ai_adapter import PRF_AI_Coach
+
+router = APIRouter(prefix="/study", tags=["Estudos PRF"])
+ai_coach = PRF_AI_Coach()
+
+@router.get("/subjects", response_model=List[SubjectSchema])
+def list_subjects(db: Session = Depends(get_db)):
+    return db.query(Subject).all()
+
+@router.get("/metrics")
+def get_metrics(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logs = db.query(QuestionLog).filter(QuestionLog.user_id == user.id).all()
+    subjects = db.query(Subject).all()
+    return calculate_cebraspe_metrics(logs, subjects)
+
+@router.post("/log", response_model=QuestionLogResponse)
+def log_question(data: QuestionLogCreate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    new_log = QuestionLog(
+        user_id=user.id,
+        subject_id=data.subject_id,
+        result=data.result,
+        difficulty=data.difficulty,
+        notes=data.notes,
+        reviewed=(data.result == QuestionResult.CERTO),
+        time_spent_seconds=data.time_spent_seconds or 60
+    )
+    db.add(new_log)
+    db.commit()
+    db.refresh(new_log)
+    return new_log
+
+@router.get("/caderno-erros")
+def get_caderno_erros(reviewed: Optional[bool] = None, subject_id: Optional[int] = None, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    query = db.query(QuestionLog).filter(QuestionLog.user_id == user.id, QuestionLog.result == QuestionResult.ERRADO)
+    if reviewed is not None:
+        query = query.filter(QuestionLog.reviewed == reviewed)
+    if subject_id:
+        query = query.filter(QuestionLog.subject_id == subject_id)
+    return query.order_by(QuestionLog.created_at.desc()).all()
+`,
+  },
+  {
     path: 'render.yaml',
     filename: 'render.yaml',
     language: 'yaml',

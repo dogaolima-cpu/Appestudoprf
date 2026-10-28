@@ -1,0 +1,23 @@
+/* PRF Tracker - Estilos base para Jinja2 e templates HTML */
+:root {
+  --bg-primary: #020617;
+  --bg-surface: #0f172a;
+  --border-color: #1e293b;
+  --accent-gold: #f59e0b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --color-success: #10b981;
+  --color-danger: #f43f5e;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+}
